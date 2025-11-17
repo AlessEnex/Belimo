@@ -3,36 +3,41 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Valve Selector</title>
+  <title>Valve & Actuator Selector</title>
   <link rel="stylesheet" href="style.css" />
 </head>
-
 <body>
-  <div class="app-container">
-    <h1>Valve Selector</h1>
 
-    <div class="card">
-      <label>Marchio valvola</label>
-      <select id="marchio"></select>
-
-      <label>Diametro valvola</label>
-      <select id="diametro"></select>
-
-      <label>Tipo attuatore</label>
-      <select id="attuatore">
-        <option value="">—</option>
-        <option value="modulante">Modulante</option>
-        <option value="onoff">ON/OFF</option>
-      </select>
-
-      <button id="calcola">Calcola</button>
+  <div class="app-container two-col-layout">
+    <h1>Valve & Actuator Selector</h1>
+    <div class="main-flex">
+      <div class="card col-sx">
+        <h2>Selezione valvola</h2>
+        <label>Brand valvola</label>
+        <div id="brandValvolaTags" class="tag-row"></div>
+        <label>Corpo valvola</label>
+        <div id="materialeValvolaTags" class="tag-row"></div>
+        <label>Diametro valvola</label>
+        <div id="diametroValvolaTags" class="tag-row"></div>
+        <hr class="divider" />
+        <h2>Selezione motore</h2>
+        <label>Brand motore</label>
+        <div id="brandMotoreTags" class="tag-row"></div>
+        <label>Tipo motore</label>
+        <div id="tipoMotoreTags" class="tag-row"></div>
+        <p id="errore" class="error hidden"></p>
+      </div>
+      <div id="risultato" class="card col-dx hidden">
+        <h2>Risultato</h2>
+        <div id="valvolaInfo"></div>
+        <div id="kitInfo"></div>
+        <div id="adattatoreInfo"></div>
+        <div id="motoreInfo"></div>
+      </div>
     </div>
-
-    <div id="risultato" class="card hidden"></div>
   </div>
 
-  <script src="js/fetch.js"></script>
-  <script src="js/logic.js"></script>
   <script src="js/ui.js"></script>
+  <script src="js/logic.js"></script>
 </body>
 </html>

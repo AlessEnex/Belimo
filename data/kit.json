@@ -1,1 +1,23 @@
-[]
+{
+  "kit": [
+    { "codice": "25C491A", "descrizione": "KIT ATT. VAL. SFERA CO2 20Nm GMC ambv1 10/15mm" },
+    { "codice": "25C4910", "descrizione": "KIT ATT. VAL. SFERA CO2 20Nm GMC ambv2 22/28mm" },
+    { "codice": "25C4911", "descrizione": "KIT ATT. VAL. SFERA 20Nm 22/28mm (variante)" },
+    { "codice": "25C4920", "descrizione": "KIT ATT. VAL. SFERA CO2 40Nm GMC ambv4 35/42/48mm" },
+    { "codice": "25C4921", "descrizione": "KIT ATT. VAL. SFERA 40Nm 35/42/48mm (variante)" },
+    { "codice": "25C492A", "descrizione": "KIT ATT. VAL. SFERA CO2 90Nm GMC ambv5 60mm" },
+    { "codice": "25C270B", "descrizione": "KIT ATT. VAL. SFERA 20Nm 10/15mm" },
+    { "codice": "25C5040", "descrizione": "KIT ATT. VAL. SFERA 20Nm 22/28mm" },
+    { "codice": "25C5041", "descrizione": "KIT ATT. VAL. SFERA 20Nm 22/28mm (variante)" },
+    { "codice": "25C5030", "descrizione": "KIT ATT. VAL. SFERA 40Nm 22/28mm" },
+    { "codice": "25C5031", "descrizione": "KIT ATT. VAL. SFERA 40Nm 22/28mm (variante)" },
+    { "codice": "25C1640", "descrizione": "KIT ATT. VAL. SFERA 40 Nm 42mm Ottone" },
+    { "codice": "25C1641", "descrizione": "KIT ATT. VAL. SFERA 40 Nm 42mm Ottone (variante)" },
+    { "codice": "25C162A", "descrizione": "KIT ATT. VAL. SFERA 40Nm 35/42mm" },
+    { "codice": "25C162C", "descrizione": "KIT ATT. VAL. SFERA CO2 40Nm INOX-NAVI" },
+    { "codice": "25C4660", "descrizione": "KIT ATT. VAL. SFERA 2-VIE 160Nm 60mm" },
+    { "codice": "25C4661", "descrizione": "KIT ATT. VAL. SFERA 2-VIE 160Nm 60mm (variante)" },
+    { "codice": "25C162B", "descrizione": "KIT ATT. VAL. SFERA 3-VIE 160Nm 60mm" },
+    { "codice": "25C270D", "descrizione": "KIT ATT. VAL. WATERGATE 16mm" }
+  ]
+}
