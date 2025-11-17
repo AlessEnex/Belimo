@@ -1,0 +1,13 @@
+{
+  "motori": [
+    { "codice": "25C201P", "brand": "BELIMO",     "tipo": "ON-OFF",    "Nm": 20 },
+    { "codice": "25C348A", "brand": "BELIMO",     "tipo": "MODULANTE", "Nm": 20 },
+    { "codice": "25C201Q", "brand": "BELIMO",     "tipo": "ON-OFF",    "Nm": 40 },
+    { "codice": "25C201F", "brand": "BELIMO",     "tipo": "MODULANTE", "Nm": 40 },
+    { "codice": "25C201R", "brand": "BELIMO",     "tipo": "ON-OFF",    "Nm": 90 },
+    { "codice": "25C201S", "brand": "BELIMO",     "tipo": "MODULANTE", "Nm": 90 },
+    { "codice": "25C392A", "brand": "BELIMO",     "tipo": "ON-OFF",    "Nm": 160 },
+    { "codice": "25C4670", "brand": "BELIMO",     "tipo": "MODULANTE", "Nm": 160 },
+    { "codice": "25C3030", "brand": "WATERGATE",  "tipo": "ON-OFF",    "Nm": 50 }
+  ]
+}

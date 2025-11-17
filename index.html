@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Valve Selector</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+
+<body>
+  <div class="app-container">
+    <h1>Valve Selector</h1>
+
+    <div class="card">
+      <label>Marchio valvola</label>
+      <select id="marchio"></select>
+
+      <label>Diametro valvola</label>
+      <select id="diametro"></select>
+
+      <label>Tipo attuatore</label>
+      <select id="attuatore">
+        <option value="">—</option>
+        <option value="modulante">Modulante</option>
+        <option value="onoff">ON/OFF</option>
+      </select>
+
+      <button id="calcola">Calcola</button>
+    </div>
+
+    <div id="risultato" class="card hidden"></div>
+  </div>
+
+  <script src="js/fetch.js"></script>
+  <script src="js/logic.js"></script>
+  <script src="js/ui.js"></script>
+</body>
+</html>

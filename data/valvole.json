@@ -1,0 +1,23 @@
+{
+  "valvole": [
+    { "id": "GMC_OTTONE_10", "brand": "GMC", "materiale": "OTTONE", "diametro": 10 },
+    { "id": "GMC_OTTONE_12", "brand": "GMC", "materiale": "OTTONE", "diametro": 12 },
+    { "id": "GMC_OTTONE_16", "brand": "GMC", "materiale": "OTTONE", "diametro": 16 },
+    { "id": "GMC_OTTONE_22", "brand": "GMC", "materiale": "OTTONE", "diametro": 22 },
+    { "id": "GMC_OTTONE_28", "brand": "GMC", "materiale": "OTTONE", "diametro": 28 },
+    { "id": "GMC_OTTONE_35", "brand": "GMC", "materiale": "OTTONE", "diametro": 35 },
+    { "id": "GMC_OTTONE_42", "brand": "GMC", "materiale": "OTTONE", "diametro": 42 },
+    { "id": "GMC_OTTONE_48", "brand": "GMC", "materiale": "OTTONE", "diametro": 48 },
+    { "id": "GMC_OTTONE_60", "brand": "GMC", "materiale": "OTTONE", "diametro": 60 },
+
+    { "id": "REFRIGERA_INOX_10", "brand": "REFRIGERA", "materiale": "INOX", "diametro": 10 },
+    { "id": "REFRIGERA_INOX_12", "brand": "REFRIGERA", "materiale": "INOX", "diametro": 12 },
+    { "id": "REFRIGERA_INOX_16", "brand": "REFRIGERA", "materiale": "INOX", "diametro": 16 },
+    { "id": "REFRIGERA_INOX_22", "brand": "REFRIGERA", "materiale": "INOX", "diametro": 22 },
+    { "id": "REFRIGERA_INOX_28", "brand": "REFRIGERA", "materiale": "INOX", "diametro": 28 },
+    { "id": "REFRIGERA_INOX_35", "brand": "REFRIGERA", "materiale": "INOX", "diametro": 35 },
+    { "id": "REFRIGERA_INOX_42", "brand": "REFRIGERA", "materiale": "INOX", "diametro": 42 },
+    { "id": "REFRIGERA_INOX_48", "brand": "REFRIGERA", "materiale": "INOX", "diametro": 48 },
+    { "id": "REFRIGERA_INOX_60", "brand": "REFRIGERA", "materiale": "INOX", "diametro": 60 }
+  ]
+}
