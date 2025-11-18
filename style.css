@@ -1,3 +1,7 @@
+/* Tabella configurazioni salvate: giustifica a sinistra */
+#configListTable {
+  text-align: left;
+}
 /* Spaziatura tra i pulsanti tag */
 .tag-row {
   display: flex;
@@ -134,12 +138,26 @@ button {
   background: #1c1c1e;
   color: var(--text);
   font-size: 0.9rem;
-  outline: none;
 }
 
-select:focus,
-button:focus {
-  border-color: var(--accent);
+/* Hover effetto riflesso sui tag-btn */
+.tag-btn:hover {
+  position: relative;
+  background: inherit;
+  color: inherit;
+  border-color: inherit;
+  box-shadow: none;
+  transform: scale(1.045);
+  z-index: 2;
+}
+.tag-btn:hover::after {
+  content: '';
+  position: absolute;
+  left: 0; top: 0; right: 0; bottom: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background: linear-gradient(120deg, rgba(255,255,255,0.18) 10%, rgba(255,255,255,0.04) 60%, rgba(255,255,255,0.00) 100%);
+  mix-blend-mode: lighten;
 }
 
 button {

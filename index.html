@@ -1,3 +1,14 @@
+  <!-- Modal preview CSV -->
+  <div id="csvPreviewModal" style="display:none;position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(0,0,0,0.32);z-index:1000;align-items:center;justify-content:center;">
+    <div style="background:#222;padding:28px 24px 18px 24px;border-radius:18px;min-width:340px;max-width:90vw;max-height:80vh;overflow:auto;box-shadow:0 8px 32px #000a;">
+      <h2 style="margin-top:0;font-size:1.2em;">Preview esportazione CSV</h2>
+      <div id="csvPreviewTableBox"></div>
+      <div style="margin-top:18px;text-align:right;">
+        <button id="csvPreviewCancelBtn" style="margin-right:12px;">Annulla</button>
+        <button id="csvPreviewConfirmBtn" style="background:#007aff;color:#fff;">Esporta CSV</button>
+      </div>
+    </div>
+  </div>
 <!DOCTYPE html>
 <html lang="it">
 <head>
@@ -12,6 +23,12 @@
     <h1>Valve & Actuator Selector</h1>
     <div class="main-flex">
       <div class="card col-sx">
+        <label for="puntoImpiantoSelect" style="font-weight:600;margin-bottom:6px;">Punto di impianto</label>
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
+          <select id="puntoImpiantoSelect" style="flex:1;max-width:320px;"></select>
+          <span id="puntoImpiantoInfoIcon" title="" style="display:none;cursor:pointer;font-size:1.2em;color:#007aff;">&#9432;</span>
+        </div>
+        <div id="puntoImpiantoInfoMsg" style="display:none;font-size:0.95em;color:#007aff;margin-bottom:10px;"></div>
         <h2>Selezione valvola</h2>
         <label>Brand valvola</label>
         <div id="brandValvolaTags" class="tag-row"></div>
@@ -33,11 +50,25 @@
         <div id="kitInfo"></div>
         <div id="adattatoreInfo"></div>
         <div id="motoreInfo"></div>
+        <button id="saveConfigBtn" style="margin-top:18px;display:none;">Salva configurazione</button>
+        <button id="exportCsvBtn" style="margin-top:8px;display:none;">Esporta CSV</button>
+        <div id="configListBox" style="margin-top:24px;display:none;">
+          <h3>Configurazioni salvate</h3>
+          <table id="configListTable" style="width:100%;font-size:0.95em;"></table>
+          <div style="display:flex;gap:10px;margin-top:10px;">
+            <button id="exportAllCsvBtn">Esporta tutte in CSV</button>
+            <button id="exportSummaryPdfBtn">Salva riepilogo</button>
+          </div>
+        </div>
       </div>
     </div>
   </div>
 
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.0/jspdf.plugin.autotable.min.js"></script>
   <script src="js/ui.js"></script>
   <script src="js/logic.js"></script>
+  <script src="js/export.js"></script>
+  <script src="js/export_pdf.js"></script>
 </body>
 </html>
