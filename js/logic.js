@@ -1,5 +1,7 @@
 // Array per le configurazioni salvate
 window.configurazioniSalvate = [];
+// Kit selezionato quando ci sono multiple opzioni
+window.kitSelezionato = null;
 // Caricamento dati valvole e motori e inizializzazione UI a tag
 let valvole = [];
 let motori = [];
@@ -84,11 +86,32 @@ function renderRisultato({ valvola, adattatoreObj, kitObjects, motoreScelto }) {
 
 	valvolaInfo.innerHTML = '';
 
-	if (kitObjects.length > 0) {
-		const righe = kitObjects.map(k => `<p><span class="code">${k.codice}</span> — ${k.descrizione || ''}</p>`).join('');
-		kitInfo.innerHTML = righe;
+	if (kitObjects.length > 1) {
+		// Più kit disponibili: mostra radio button per scegliere
+		const righe = kitObjects.map((k, idx) => `
+			<label style="display:block;margin:6px 0;cursor:pointer;">
+				<input type="radio" name="kitChoice" value="${k.codice}" ${idx === 0 ? 'checked' : ''}>
+				<span class="code">${k.codice}</span> — ${k.descrizione || ''}
+			</label>
+		`).join('');
+		kitInfo.innerHTML = '<p style="font-weight:600;margin-bottom:8px;">Scegli un kit:</p>' + righe;
+		// Imposta il kit selezionato di default
+		window.kitSelezionato = kitObjects[0];
+		// Aggiungi listener per il cambio di selezione
+		setTimeout(() => {
+			document.querySelectorAll('input[name="kitChoice"]').forEach(radio => {
+				radio.addEventListener('change', function() {
+					window.kitSelezionato = kitObjects.find(k => k.codice === this.value);
+				});
+			});
+		}, 0);
+	} else if (kitObjects.length === 1) {
+		// Un solo kit: mostra normalmente
+		kitInfo.innerHTML = `<p><span class="code">${kitObjects[0].codice}</span> — ${kitObjects[0].descrizione || ''}</p>`;
+		window.kitSelezionato = kitObjects[0];
 	} else {
 		kitInfo.innerHTML = `<p>Nessun kit configurato per questa combinazione.</p>`;
+		window.kitSelezionato = null;
 	}
 
 	if (adattatoreObj) {
@@ -186,7 +209,8 @@ document.addEventListener('DOMContentLoaded', async () => {
 	const saveBtn = document.getElementById('saveConfigBtn');
 	if (saveBtn) {
 		saveBtn.addEventListener('click', () => {
-			const kit = document.getElementById('kitInfo').innerText.trim();
+			// Usa il kit selezionato se disponibile, altrimenti prendi il testo
+			const kit = window.kitSelezionato ? `${window.kitSelezionato.codice} — ${window.kitSelezionato.descrizione || ''}` : document.getElementById('kitInfo').innerText.trim();
 			const adattatore = document.getElementById('adattatoreInfo').innerText.trim();
 			const motore = document.getElementById('motoreInfo').innerText.trim();
 			const selezione = getSelezioneCorrente();
@@ -207,8 +231,217 @@ document.addEventListener('DOMContentLoaded', async () => {
 			esportaTutteConfigurazioniCSV();
 		});
 	}
+
+	// Collega il pulsante Mostra Recap
+	const toggleRecapBtn = document.getElementById('toggleRecapBtn');
+	const recapModal = document.getElementById('recapModal');
+	const closeRecapBtn = document.getElementById('closeRecapBtn');
+	if (toggleRecapBtn && recapModal) {
+		toggleRecapBtn.addEventListener('click', () => {
+			mostraRecapConfigurazione();
+			recapModal.style.display = 'flex';
+		});
+	}
+	if (closeRecapBtn && recapModal) {
+		closeRecapBtn.addEventListener('click', () => {
+			recapModal.style.display = 'none';
+		});
+	}
 });
-// Aggiorna la tabella delle configurazioni salvate
+
+// Mostra tutte le regole di mappatura disponibili nei JSON
+function mostraRecapConfigurazione() {
+	const recapContent = document.getElementById('recapContent');
+	const articoliBox = document.getElementById('articoliDisponibili');
+	if (!recapContent) return;
+	
+	if (!valvole || valvole.length === 0) {
+		recapContent.innerHTML = '<p style="color:#8e8e93;text-align:center;padding:20px;">Dati non ancora caricati.</p>';
+		return;
+	}
+
+	// Popola la sidebar con articoli disponibili
+	if (articoliBox) {
+		let sidebarHtml = '';
+		
+		// Valvole
+		sidebarHtml += '<div style="margin-bottom:16px;"><h4 style="color:#007aff;font-size:0.9em;margin:0 0 8px 0;">Valvole</h4>';
+		sidebarHtml += '<div style="font-size:0.8em;color:#8e8e93;line-height:1.6;">';
+		valvole.forEach(v => {
+			sidebarHtml += `<div>${v.brand} ${v.materiale} ${v.diametro}mm</div>`;
+		});
+		sidebarHtml += '</div></div>';
+		
+		// Kit
+		sidebarHtml += '<div style="margin-bottom:16px;"><h4 style="color:#007aff;font-size:0.9em;margin:0 0 8px 0;">Kit</h4>';
+		sidebarHtml += '<div style="font-size:0.8em;color:#8e8e93;line-height:1.6;">';
+		kit.forEach(k => {
+			sidebarHtml += `<div><strong>${k.codice}</strong> - ${k.descrizione}</div>`;
+		});
+		sidebarHtml += '</div></div>';
+		
+		// Motori
+		sidebarHtml += '<div style="margin-bottom:16px;"><h4 style="color:#007aff;font-size:0.9em;margin:0 0 8px 0;">Motori</h4>';
+		sidebarHtml += '<div style="font-size:0.8em;color:#8e8e93;line-height:1.6;">';
+		motori.forEach(m => {
+			sidebarHtml += `<div><strong>${m.codice}</strong> - ${m.brand} ${m.tipo}</div>`;
+		});
+		sidebarHtml += '</div></div>';
+		
+		// Adattatori
+		sidebarHtml += '<div style="margin-bottom:16px;"><h4 style="color:#007aff;font-size:0.9em;margin:0 0 8px 0;">Adattatori</h4>';
+		sidebarHtml += '<div style="font-size:0.8em;color:#8e8e93;line-height:1.6;">';
+		adattatori.forEach(a => {
+			sidebarHtml += `<div><strong>${a.codice}</strong> - ${a.descrizione}</div>`;
+		});
+		sidebarHtml += '</div></div>';
+		
+		articoliBox.innerHTML = sidebarHtml;
+	}
+
+	let html = '<div style="margin-bottom:16px;text-align:right;"><button id="salvaJsonBtn" style="padding:8px 16px;background:#28a745;color:#fff;border:none;border-radius:8px;font-size:0.9rem;font-weight:500;cursor:pointer;">Salva modifiche JSON</button></div>';
+	html += '<div style="margin-bottom:20px;">';
+	
+	// Raggruppa per brand
+	const gruppi = {};
+	valvole.forEach(v => {
+		if (!gruppi[v.brand]) gruppi[v.brand] = [];
+		gruppi[v.brand].push(v);
+	});
+
+	Object.keys(gruppi).sort().forEach(brand => {
+		html += `<div style="margin-bottom:24px;">`;
+		html += `<h3 style="color:#007aff;font-size:1.15em;margin-bottom:12px;border-bottom:1px solid #3a3a3c;padding-bottom:6px;">${brand}</h3>`;
+		
+		gruppi[brand].forEach(v => {
+			const key = `${v.brand}_${v.materiale}_${v.diametro}`;
+			const keyWatergate = `${key}_WATERGATE`;
+			
+			// Kit con codice e descrizione
+			const kitCodes = mappaKit[key] || [];
+			const kitDisplay = kitCodes.map(kc => {
+				const k = kit.find(x => x.codice === kc);
+				return k ? `${k.codice} - ${k.descrizione}` : kc;
+			}).join(' | ');
+			const kitEditValue = kitCodes.join(', ');
+			
+			// Motori con codice, brand e tipo
+			const motoriCodes = mappaMotore[key] || [];
+			const motoriWatergateCodes = mappaMotore[keyWatergate] || [];
+			const allMotoriCodes = [...new Set([...motoriCodes, ...motoriWatergateCodes])];
+			const motoriDisplay = allMotoriCodes.map(mc => {
+				const m = motori.find(x => x.codice === mc);
+				return m ? `${m.codice} - ${m.brand} ${m.tipo}` : mc;
+			}).join(' | ');
+			const motoriEditValue = allMotoriCodes.join(', ');
+			
+			// Adattatore con codice e descrizione
+			const adattatoreCode = mappaAdattatore[key] || '';
+			const adattatoreDisplay = adattatoreCode ? (() => {
+				const a = adattatori.find(x => x.codice === adattatoreCode);
+				return a ? `${a.codice} - ${a.descrizione}` : adattatoreCode;
+			})() : '';
+			
+			html += `
+				<div style="background:#2c2c2e;border:1px solid #3a3a3c;border-radius:8px;padding:12px;margin-bottom:10px;" data-key="${key}">
+					<div style="font-weight:600;color:#f2f2f7;margin-bottom:8px;">${v.materiale} ${v.diametro}mm</div>
+					<div style="font-size:0.9em;line-height:1.8;">
+						<div style="margin-bottom:8px;">
+							<strong style="color:#f2f2f7;">Kit:</strong>
+							<div style="color:#8e8e93;font-size:0.85em;margin:4px 0;">${kitDisplay || 'N/A'}</div>
+							<input type="text" class="edit-kit" value="${kitEditValue}" style="width:100%;padding:4px 8px;background:#1c1c1e;border:1px solid #3a3a3c;border-radius:6px;color:#f2f2f7;font-size:0.9em;" placeholder="es: 25C162A, 25C162C">
+						</div>
+						<div style="margin-bottom:8px;">
+							<strong style="color:#f2f2f7;">Motori:</strong>
+							<div style="color:#8e8e93;font-size:0.85em;margin:4px 0;">${motoriDisplay || 'N/A'}</div>
+							<input type="text" class="edit-motori" value="${motoriEditValue}" style="width:100%;padding:4px 8px;background:#1c1c1e;border:1px solid #3a3a3c;border-radius:6px;color:#f2f2f7;font-size:0.9em;" placeholder="es: 25C201Q, 25C201F">
+						</div>
+						<div>
+							<strong style="color:#f2f2f7;">Adattatore:</strong>
+							<div style="color:#8e8e93;font-size:0.85em;margin:4px 0;">${adattatoreDisplay || 'N/A'}</div>
+							<input type="text" class="edit-adattatore" value="${adattatoreCode}" style="width:100%;padding:4px 8px;background:#1c1c1e;border:1px solid #3a3a3c;border-radius:6px;color:#f2f2f7;font-size:0.9em;" placeholder="es: 25C201C">
+						</div>
+					</div>
+				</div>
+			`;
+		});
+		
+		html += `</div>`;
+	});
+	
+	html += '</div>';
+	recapContent.innerHTML = html;
+	
+	// Collega il pulsante salva
+	setTimeout(() => {
+		const salvaBtn = document.getElementById('salvaJsonBtn');
+		if (salvaBtn) {
+			salvaBtn.addEventListener('click', salvaModificheJson);
+		}
+	}, 0);
+}
+
+// Salva le modifiche ai JSON
+function salvaModificheJson() {
+	const cards = document.querySelectorAll('[data-key]');
+	
+	cards.forEach(card => {
+		const key = card.getAttribute('data-key');
+		const kitInput = card.querySelector('.edit-kit').value.trim();
+		const motoriInput = card.querySelector('.edit-motori').value.trim();
+		const adattatoreInput = card.querySelector('.edit-adattatore').value.trim();
+		
+		// Aggiorna kit
+		if (kitInput) {
+			mappaKit[key] = kitInput.split(',').map(s => s.trim()).filter(Boolean);
+		} else {
+			delete mappaKit[key];
+		}
+		
+		// Aggiorna motori
+		if (motoriInput) {
+			mappaMotore[key] = motoriInput.split(',').map(s => s.trim()).filter(Boolean);
+		} else {
+			delete mappaMotore[key];
+		}
+		
+		// Aggiorna adattatore
+		if (adattatoreInput) {
+			mappaAdattatore[key] = adattatoreInput;
+		} else {
+			delete mappaAdattatore[key];
+		}
+	});
+	
+	// Prepara i JSON per il download
+	const jsonKit = JSON.stringify({ mappa: mappaKit }, null, 2);
+	const jsonMotore = JSON.stringify({ mappa: mappaMotore }, null, 2);
+	const jsonAdattatore = JSON.stringify({ mappa: mappaAdattatore }, null, 2);
+	
+	// Download mappa_valvola_kit.json
+	downloadJson(jsonKit, 'mappa_valvola_kit.json');
+	
+	// Download mappa_valvola_motore.json
+	setTimeout(() => downloadJson(jsonMotore, 'mappa_valvola_motore.json'), 200);
+	
+	// Download mappa_valvola_adattatore.json
+	setTimeout(() => downloadJson(jsonAdattatore, 'mappa_valvola_adattatore.json'), 400);
+	
+	alert('JSON modificati scaricati! Sostituisci i file nella cartella data/ per applicare le modifiche.');
+}
+
+function downloadJson(content, filename) {
+	const blob = new Blob([content], { type: 'application/json' });
+	const url = URL.createObjectURL(blob);
+	const a = document.createElement('a');
+	a.href = url;
+	a.download = filename;
+	document.body.appendChild(a);
+	a.click();
+	document.body.removeChild(a);
+	URL.revokeObjectURL(url);
+}
+
 function aggiornaTabellaConfigurazioni() {
 	const box = document.getElementById('configListBox');
 	const table = document.getElementById('configListTable');

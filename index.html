@@ -20,8 +20,9 @@
 <body>
 
   <div class="app-container two-col-layout">
-    <div style="text-align:right;margin-bottom:12px;">
-      <a href="https://alessenex.github.io/Dashboard_tools/" target="_blank" style="display:inline-block;padding:8px 16px;background:#007aff;color:#fff;text-decoration:none;border-radius:8px;font-size:0.9rem;font-weight:500;">← Dashboard Tools</a>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+      <button id="toggleRecapBtn" style="padding:8px 16px;background:#5e5ce6;color:#fff;border:none;border-radius:8px;font-size:0.9rem;font-weight:500;cursor:pointer;">Mostra Regole</button>
+      <a href="https://alessenex.github.io/Dashboard_tools/" target="_blank" style="display:inline-block;padding:8px 16px;background:#007aff;color:#fff;text-decoration:none;border-radius:8px;font-size:0.9rem;font-weight:500;">Dashboard Tools</a>
     </div>
     <h1>Valve & Actuator Selector</h1>
     <div class="main-flex">
@@ -63,6 +64,25 @@
             <button id="exportSummaryPdfBtn">Salva riepilogo</button>
           </div>
         </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Recap configurazioni -->
+  <div id="recapModal" style="display:none;position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(0,0,0,0.5);z-index:1000;align-items:center;justify-content:center;">
+    <div style="background:#1c1c1e;padding:32px 28px;border-radius:18px;min-width:400px;max-width:95vw;max-height:85vh;overflow:hidden;box-shadow:0 8px 48px rgba(0,0,0,0.6);border:1px solid #3a3a3c;display:flex;flex-direction:column;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+        <h2 style="margin:0;font-size:1.4em;">Regole di Mappatura</h2>
+        <button id="closeRecapBtn" style="background:transparent;border:none;color:#f2f2f7;font-size:1.5em;cursor:pointer;padding:0;width:32px;height:32px;">×</button>
+      </div>
+      <div style="display:flex;gap:20px;flex:1;overflow:hidden;">
+        <!-- Sidebar sinistra con liste articoli -->
+        <div style="width:320px;background:#2c2c2e;border:1px solid #3a3a3c;border-radius:12px;padding:16px;overflow-y:auto;">
+          <h3 style="color:#007aff;font-size:1em;margin:0 0 12px 0;border-bottom:1px solid #3a3a3c;padding-bottom:6px;">Articoli disponibili</h3>
+          <div id="articoliDisponibili"></div>
+        </div>
+        <!-- Contenuto principale -->
+        <div style="flex:1;overflow-y:auto;" id="recapContent"></div>
       </div>
     </div>
   </div>
