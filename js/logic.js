@@ -65,19 +65,19 @@ function mostraRisultatoAutomatico() {
 	// Motori
 	const motoriCodes = mappaMotore[key] || [];
 	const motoriCompatibili = motoriCodes.map(mc => motori.find(m => m.codice === mc)).filter(Boolean);
-	const motoreScelto = motoriCompatibili.find(m => m.brand === s.brandMotore && m.tipo === s.tipoMotore);
+	const motoriDelTipo = motoriCompatibili.filter(m => m.brand === s.brandMotore && m.tipo === s.tipoMotore);
 	// Adattatore
 	let adattatoreCodice = null;
 	if (s.brandMotore !== 'WATERGATE') adattatoreCodice = mappaAdattatore[baseKey] || null;
 	const adattatoreObj = adattatoreCodice ? adattatori.find(a => a.codice === adattatoreCodice) : null;
-	if (!motoreScelto) {
+	if (!motoriDelTipo || motoriDelTipo.length === 0) {
 		mostraErrore('Nessun motore trovato per questa combinazione di brand/tipo.');
 		return;
 	}
-	renderRisultato({ valvola, adattatoreObj, kitObjects, motoreScelto });
+	renderRisultato({ valvola, adattatoreObj, kitObjects, motoriDelTipo });
 }
 
-function renderRisultato({ valvola, adattatoreObj, kitObjects, motoreScelto }) {
+function renderRisultato({ valvola, adattatoreObj, kitObjects, motoriDelTipo }) {
 	const risultato = document.getElementById('risultato');
 	const valvolaInfo = document.getElementById('valvolaInfo');
 	const kitInfo = document.getElementById('kitInfo');
@@ -120,7 +120,30 @@ function renderRisultato({ valvola, adattatoreObj, kitObjects, motoreScelto }) {
 		adattatoreInfo.innerHTML = `<p>Non richiesto.</p>`;
 	}
 
-	motoreInfo.innerHTML = `<p><span class="code">${motoreScelto.codice}</span> — ${motoreScelto.descrizione || motoreScelto.tipo + ' ' + (motoreScelto.Nm ? motoreScelto.Nm + 'Nm' : '')}</p>`;
+	// Motori: se più di uno, mostra radio button
+	if (motoriDelTipo.length > 1) {
+		const righe = motoriDelTipo.map((m, idx) => `
+			<label style="display:block;margin:6px 0;cursor:pointer;">
+				<input type="radio" name="motoreChoice" value="${m.codice}" ${idx === 0 ? 'checked' : ''}>
+				<span class="code">${m.codice}</span> — ${m.descrizione || m.tipo + ' ' + (m.Nm ? m.Nm + 'Nm' : '')}
+			</label>
+		`).join('');
+		motoreInfo.innerHTML = '<p style="font-weight:600;margin-bottom:8px;">Scegli un motore:</p>' + righe;
+		// Imposta il motore selezionato di default
+		window.motoreSelezionato = motoriDelTipo[0];
+		// Aggiungi listener per il cambio di selezione
+		setTimeout(() => {
+			document.querySelectorAll('input[name="motoreChoice"]').forEach(radio => {
+				radio.addEventListener('change', function() {
+					window.motoreSelezionato = motoriDelTipo.find(m => m.codice === this.value);
+				});
+			});
+		}, 0);
+	} else if (motoriDelTipo.length === 1) {
+		// Un solo motore: mostra normalmente
+		motoreInfo.innerHTML = `<p><span class="code">${motoriDelTipo[0].codice}</span> — ${motoriDelTipo[0].descrizione || motoriDelTipo[0].tipo + ' ' + (motoriDelTipo[0].Nm ? motoriDelTipo[0].Nm + 'Nm' : '')}</p>`;
+		window.motoreSelezionato = motoriDelTipo[0];
+	}
 
 	risultato.classList.remove('hidden');
 	nascondiErrore();
@@ -209,10 +232,12 @@ document.addEventListener('DOMContentLoaded', async () => {
 	const saveBtn = document.getElementById('saveConfigBtn');
 	if (saveBtn) {
 		saveBtn.addEventListener('click', () => {
+			// Usa il motore selezionato se disponibile
+			const motoreScelto = window.motoreSelezionato;
+			const motore = motoreScelto ? `${motoreScelto.codice} — ${motoreScelto.descrizione || motoreScelto.tipo + ' ' + (motoreScelto.Nm ? motoreScelto.Nm + 'Nm' : '')}` : document.getElementById('motoreInfo').innerText.trim();
 			// Usa il kit selezionato se disponibile, altrimenti prendi il testo
 			const kit = window.kitSelezionato ? `${window.kitSelezionato.codice} — ${window.kitSelezionato.descrizione || ''}` : document.getElementById('kitInfo').innerText.trim();
 			const adattatore = document.getElementById('adattatoreInfo').innerText.trim();
-			const motore = document.getElementById('motoreInfo').innerText.trim();
 			const selezione = getSelezioneCorrente();
 			window.configurazioniSalvate.push({
 				...selezione,
