@@ -1,18 +1,20 @@
 // UI dinamica a tag per i filtri
 window.statoSelezione = {
-	brandValvola: null,
-	materialeValvola: null,
-	diametroValvola: null,
-	brandMotore: null,
-	tipoMotore: null
+	modello: null,
+	tipologia: null,
+	misura: null,
+	vie: null,
+	navale: false
 };
 
-function creaTag(container, values, selected, disabledSet, onClick) {
+const VIE_LABEL = { '2': '2-VIE', '3': '3-VIE' };
+
+function creaTag(container, values, selected, disabledSet, onClick, labelFn = v => v) {
 	container.innerHTML = '';
 	values.forEach(val => {
 		const btn = document.createElement('button');
 		btn.className = 'tag-btn';
-		btn.textContent = val;
+		btn.textContent = labelFn(val);
 		if (selected === val) btn.classList.add('selected');
 		if (disabledSet && disabledSet.has(val)) {
 			btn.classList.add('disabled');
@@ -23,69 +25,73 @@ function creaTag(container, values, selected, disabledSet, onClick) {
 	});
 }
 
-function aggiornaTagUI(valvole, motori) {
-	// Brand valvola
-	const brands = [...new Set(valvole.map(v => v.brand))];
-	let materiali = [];
-	let diametri = [];
-	let materialiDis = new Set();
-	let diametriDis = new Set();
+function unici(arr) {
+	return [...new Set(arr)];
+}
 
-	// Materiali e diametri filtrati in base a brand/materiale
-	if (statoSelezione.brandValvola) {
-		materiali = [...new Set(valvole.filter(v => v.brand === statoSelezione.brandValvola).map(v => v.materiale))];
-		if (statoSelezione.materialeValvola) {
-			diametri = [...new Set(valvole.filter(v => v.brand === statoSelezione.brandValvola && v.materiale === statoSelezione.materialeValvola).map(v => v.diametro))];
-		} else {
-			diametri = [...new Set(valvole.filter(v => v.brand === statoSelezione.brandValvola).map(v => v.diametro))];
-		}
-		// Disabilita materiali non possibili
-		materialiDis = new Set([...new Set(valvole.filter(v => v.brand === statoSelezione.brandValvola).map(v => v.materiale))].filter(m => !materiali.includes(m)));
-		// Disabilita diametri non possibili
-		diametriDis = new Set([...new Set(valvole.filter(v => v.brand === statoSelezione.brandValvola).map(v => v.diametro))].filter(d => !diametri.includes(d)));
-	} else {
-		materiali = [...new Set(valvole.map(v => v.materiale))];
-		diametri = [...new Set(valvole.map(v => v.diametro))];
+function aggiornaTagUI(dati) {
+	const s = statoSelezione;
+	const righe = dati.accoppiamenti;
+	const aggiorna = () => {
+		aggiornaTagUI(dati);
+		if (window.onSelezioneCambiata) window.onSelezioneCambiata();
+	};
+
+	// Modello valvola
+	const modelli = unici(righe.map(r => r.modello));
+	creaTag(document.getElementById('modelloValvolaTags'), modelli, s.modello, null, val => {
+		s.modello = s.modello === val ? null : val;
+		s.tipologia = null;
+		s.misura = null;
+		s.vie = null;
+		aggiorna();
+	}, val => dati.modelli?.[val] || val);
+
+	// Tipologia attuatore
+	const righeModello = righe.filter(r => !s.modello || r.modello === s.modello);
+	const tipologie = unici(righeModello.map(r => r.tipologia));
+	creaTag(document.getElementById('tipologiaTags'), tipologie, s.tipologia, null, val => {
+		s.tipologia = s.tipologia === val ? null : val;
+		s.misura = null;
+		s.vie = null;
+		aggiorna();
+	});
+
+	// Misura
+	const righeTipologia = righeModello.filter(r => !s.tipologia || r.tipologia === s.tipologia);
+	const misure = unici(righeTipologia.map(r => r.misura));
+	creaTag(document.getElementById('misuraTags'), misure, s.misura, null, val => {
+		s.misura = s.misura === val ? null : val;
+		aggiorna();
+	});
+
+	// Vie: disabilita quelle non disponibili (NA in tabella)
+	const righeMisura = righeTipologia.filter(r => !s.misura || r.misura === s.misura);
+	const vieDisponibili = new Set(['2', '3'].filter(v => righeMisura.some(r => r.valvole[v])));
+	const vieDis = new Set(['2', '3'].filter(v => !vieDisponibili.has(v)));
+	if (s.vie && vieDis.has(s.vie)) s.vie = null;
+	creaTag(document.getElementById('vieTags'), ['2', '3'], s.vie, vieDis, val => {
+		s.vie = s.vie === val ? null : val;
+		aggiorna();
+	}, val => VIE_LABEL[val]);
+
+	// Opzione navale: visibile solo se la riga prevede il kit INOX-NAVI (*)
+	const navaleBox = document.getElementById('navaleBox');
+	const navaleCheck = document.getElementById('navaleCheck');
+	const rigaUnica = s.modello && s.tipologia && s.misura ? righeMisura[0] : null;
+	const prevedeNavale = !!rigaUnica?.opzioni.some(o => o.navale);
+	if (navaleBox) navaleBox.style.display = prevedeNavale ? '' : 'none';
+	if (!prevedeNavale) s.navale = false;
+	if (navaleCheck) {
+		navaleCheck.checked = s.navale;
+		navaleCheck.onchange = () => {
+			s.navale = navaleCheck.checked;
+			if (window.onSelezioneCambiata) window.onSelezioneCambiata();
+		};
 	}
-
-	creaTag(document.getElementById('brandValvolaTags'), brands, statoSelezione.brandValvola, null, val => {
-		statoSelezione.brandValvola = statoSelezione.brandValvola === val ? null : val;
-		statoSelezione.materialeValvola = null;
-		statoSelezione.diametroValvola = null;
-		aggiornaTagUI(valvole, motori);
-	});
-	creaTag(document.getElementById('materialeValvolaTags'), materiali, statoSelezione.materialeValvola, materialiDis, val => {
-		statoSelezione.materialeValvola = statoSelezione.materialeValvola === val ? null : val;
-		statoSelezione.diametroValvola = null;
-		aggiornaTagUI(valvole, motori);
-	});
-	creaTag(document.getElementById('diametroValvolaTags'), diametri, statoSelezione.diametroValvola, diametriDis, val => {
-		statoSelezione.diametroValvola = statoSelezione.diametroValvola === val ? null : val;
-		aggiornaTagUI(valvole, motori);
-	});
-
-	// Motori
-	const brandMotori = [...new Set(motori.map(m => m.brand))];
-	let tipiMotore = [];
-	let tipiMotoreDis = new Set();
-	if (statoSelezione.brandMotore) {
-		tipiMotore = [...new Set(motori.filter(m => m.brand === statoSelezione.brandMotore).map(m => m.tipo))];
-		tipiMotoreDis = new Set([...new Set(motori.filter(m => m.brand === statoSelezione.brandMotore).map(m => m.tipo))].filter(t => !tipiMotore.includes(t)));
-	} else {
-		tipiMotore = [...new Set(motori.map(m => m.tipo))];
-	}
-	creaTag(document.getElementById('brandMotoreTags'), brandMotori, statoSelezione.brandMotore, null, val => {
-		statoSelezione.brandMotore = statoSelezione.brandMotore === val ? null : val;
-		statoSelezione.tipoMotore = null;
-		aggiornaTagUI(valvole, motori);
-	});
-	creaTag(document.getElementById('tipoMotoreTags'), tipiMotore, statoSelezione.tipoMotore, tipiMotoreDis, val => {
-		statoSelezione.tipoMotore = statoSelezione.tipoMotore === val ? null : val;
-		aggiornaTagUI(valvole, motori);
-	});
 }
 
 // Inizializzazione: attende che logic.js abbia caricato i dati
-window.initTagUI = function(valvole, motori) {
-	aggiornaTagUI(valvole, motori);
+window.initTagUI = function(dati) {
+	aggiornaTagUI(dati);
 };

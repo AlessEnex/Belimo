@@ -219,3 +219,238 @@ button:active {
   border-radius: 6px;
   font-size: 0.8rem;
 }
+
+.recap-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.recap-count {
+  color: var(--muted);
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0;
+}
+
+.recap-legend .recap-pill {
+  border-radius: 999px;
+}
+
+.recap-legend {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 6px;
+}
+
+.recap-table-wrap {
+  max-height: calc(94vh - 110px);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  overflow: auto;
+  background: #202022;
+}
+
+.recap-rules-table {
+  width: 100%;
+  min-width: 860px;
+  border-collapse: separate;
+  border-spacing: 0;
+  table-layout: fixed;
+  text-align: left;
+}
+
+.recap-rules-table th {
+  position: sticky;
+  top: 0;
+  z-index: 3;
+  background: #2c2c2e;
+  color: #c7c7cc;
+  font-size: 0.7rem;
+  font-weight: 700;
+  line-height: 1;
+  padding: 8px;
+  text-transform: uppercase;
+  border-bottom: 1px solid var(--border);
+}
+
+.recap-rules-table th:nth-child(1) { width: 70px; }
+.recap-rules-table th:nth-child(2) { width: 19%; }
+.recap-rules-table th:nth-child(3) { width: 19%; }
+.recap-rules-table th:nth-child(4) { width: 14%; }
+.recap-rules-table th:nth-child(5) { width: 24%; }
+.recap-rules-table th:nth-child(6) { width: 24%; }
+
+.recap-rules-table td {
+  padding: 6px 8px;
+  vertical-align: top;
+  border-bottom: 1px solid rgba(58, 58, 60, 0.74);
+}
+
+.recap-rules-table tbody tr:not(.recap-brand-row):hover td {
+  background: rgba(94, 92, 230, 0.08);
+}
+
+.recap-related-row td {
+  padding-top: 5px;
+  border-top: 0;
+}
+
+.recap-brand-row td {
+  padding: 6px 8px;
+  background: #171719;
+  color: #66aaff;
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  border-bottom: 1px solid #303033;
+}
+
+.recap-valve-cell {
+  white-space: nowrap;
+}
+
+.recap-valve-title {
+  color: var(--text);
+  font-size: 0.9rem;
+  font-weight: 700;
+  line-height: 1.15;
+}
+
+.recap-valve-title span {
+  color: #64d2ff;
+}
+
+.recap-key {
+  margin-top: 4px;
+  color: var(--muted);
+  font-family: "SF Mono", ui-monospace, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.68rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.recap-pill-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  align-items: stretch;
+}
+
+/* Coppia attuatore + tipo sulla stessa riga */
+.recap-pair {
+  display: flex;
+  gap: 4px;
+  align-items: stretch;
+}
+
+.recap-pair .recap-pill:first-child {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.recap-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  max-width: 100%;
+  min-height: 22px;
+  padding: 3px 7px;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  font-size: 0.72rem;
+  line-height: 1.1;
+}
+
+.recap-pill-code {
+  flex: 0 0 auto;
+  font-family: "SF Mono", ui-monospace, Menlo, Monaco, Consolas, monospace;
+  font-weight: 700;
+}
+
+.recap-pill-meta {
+  min-width: 0;
+  color: rgba(255, 255, 255, 0.74);
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+.recap-pill-kit {
+  background: rgba(48, 209, 88, 0.16);
+  border-color: rgba(48, 209, 88, 0.42);
+  color: #7ee08d;
+}
+
+.recap-pill-motor {
+  background: rgba(10, 132, 255, 0.17);
+  border-color: rgba(10, 132, 255, 0.48);
+  color: #75bfff;
+}
+
+.recap-pill-modulating {
+  background: rgba(191, 90, 242, 0.18);
+  border-color: rgba(191, 90, 242, 0.46);
+  color: #d99aff;
+}
+
+.recap-pill-onoff {
+  background: rgba(100, 210, 255, 0.15);
+  border-color: rgba(100, 210, 255, 0.38);
+  color: #8adfff;
+}
+
+.recap-pill-vport {
+  background: rgba(255, 55, 95, 0.16);
+  border-color: rgba(255, 55, 95, 0.42);
+  color: #ff8fa3;
+}
+
+.recap-pill-geometry {
+  background: rgba(50, 215, 75, 0.13);
+  border-color: rgba(50, 215, 75, 0.34);
+  color: #8ee99a;
+}
+
+.recap-pill-brand {
+  background: rgba(94, 92, 230, 0.16);
+  border-color: rgba(94, 92, 230, 0.42);
+  color: #aaa8ff;
+}
+
+.recap-pill-watergate {
+  background: rgba(255, 214, 10, 0.15);
+  border-color: rgba(255, 214, 10, 0.42);
+  color: #ffe17a;
+}
+
+.recap-pill-adapter {
+  background: rgba(255, 159, 10, 0.17);
+  border-color: rgba(255, 159, 10, 0.5);
+  color: #ffc266;
+}
+
+.recap-pill-empty {
+  background: rgba(142, 142, 147, 0.12);
+  border-color: rgba(142, 142, 147, 0.22);
+  color: #8e8e93;
+}
+
+@media (max-width: 900px) {
+  .recap-toolbar {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .recap-legend {
+    justify-content: flex-start;
+  }
+}
+
+@media (max-width: 1200px) {
+  .recap-sidebar {
+    display: none;
+  }
+}

@@ -1,0 +1,1087 @@
+{
+  "fonte": "TABELLA ACCOPPIAMENTI VALVOLE-MOTORI v3",
+  "modelli": {
+    "GMC": "GMC",
+    "REF": "REF (corpo ottone)",
+    "REF WATERGATE": "REF Watergate"
+  },
+  "kitNavale": "25C162C",
+  "kit": [
+    {
+      "codice": "25C491A",
+      "descrizione": "KIT ATT. VAL. SFERA CO2 20 Nm GMC ambv1 10/15mm"
+    },
+    {
+      "codice": "25C4910",
+      "descrizione": "KIT ATT. VAL. SFERA CO2 20 Nm GMC ambv2 22/28mm"
+    },
+    {
+      "codice": "25C4920",
+      "descrizione": "KIT ATT. VAL. SFERA CO2 40 Nm GMC ambv4 35/42/48mm"
+    },
+    {
+      "codice": "25C492A",
+      "descrizione": "KIT ATT. VAL. SFERA CO2 90 Nm GMC ambv5 60mm"
+    },
+    {
+      "codice": "25C270B",
+      "descrizione": "KIT ATT. VAL. SFERA 20 Nm 10/15mm"
+    },
+    {
+      "codice": "25C5040",
+      "descrizione": "KIT ATT. VAL. SFERA 20 Nm 22/28mm"
+    },
+    {
+      "codice": "25C5030",
+      "descrizione": "KIT ATT. VAL. SFERA 40 Nm 22/28mm"
+    },
+    {
+      "codice": "25C162A",
+      "descrizione": "KIT ATT. VAL. SFERA 40 Nm 35/42mm"
+    },
+    {
+      "codice": "25C162C",
+      "descrizione": "KIT ATT. VAL. SFERA 40 Nm INOX-NAVI"
+    },
+    {
+      "codice": "25C4660",
+      "descrizione": "KIT ATT. VAL. SFERA 2-VIE 160Nm 60mm"
+    },
+    {
+      "codice": "25C162B",
+      "descrizione": "KIT ATT. VAL. SFERA 3-VIE 160Nm 60mm"
+    },
+    {
+      "codice": "25C270D",
+      "descrizione": "KIT ATT. VAL. WATERGATE 16mm"
+    }
+  ],
+  "adattatori": [
+    {
+      "codice": "25C201D",
+      "descrizione": "ADATT. PERNO GR 9x9 mm"
+    },
+    {
+      "codice": "25C201C",
+      "descrizione": "ADATT. PERNO GR 14x14 mm"
+    },
+    {
+      "codice": "25C201N",
+      "descrizione": "ADATT. PERNO Belimo 90Nm e 160Nm"
+    }
+  ],
+  "attuatori": [
+    {
+      "codice": "25C201P",
+      "descrizione": "ATTUATORE 20 Nm PER VAL. HP",
+      "brand": "BELIMO",
+      "tipo": "ON-OFF",
+      "Nm": 20,
+      "alimentazione": "230V"
+    },
+    {
+      "codice": "25C348A",
+      "descrizione": "ATTUATORE 20 Nm VAL. HP MODULANTE",
+      "brand": "BELIMO",
+      "tipo": "MODULANTE",
+      "Nm": 20,
+      "alimentazione": "24V"
+    },
+    {
+      "codice": "25C201Q",
+      "descrizione": "ATTUATORE 40 Nm PER VAL. HP",
+      "brand": "BELIMO",
+      "tipo": "ON-OFF",
+      "Nm": 40,
+      "alimentazione": "230V"
+    },
+    {
+      "codice": "25C201F",
+      "descrizione": "ATTUATORE 40 Nm PER VAL. HP MODULANTE",
+      "brand": "BELIMO",
+      "tipo": "MODULANTE",
+      "Nm": 40,
+      "alimentazione": "24V"
+    },
+    {
+      "codice": "25C201R",
+      "descrizione": "ATTUATORE 90 Nm BELIMO ON-OFF",
+      "brand": "BELIMO",
+      "tipo": "ON-OFF",
+      "Nm": 90,
+      "alimentazione": "230V"
+    },
+    {
+      "codice": "25C392A",
+      "descrizione": "ATTUATORE 160Nm 35sec 230V IP66 On-Off",
+      "brand": "BELIMO",
+      "tipo": "ON-OFF",
+      "Nm": 160,
+      "alimentazione": "230V"
+    },
+    {
+      "codice": "25C4670",
+      "descrizione": "ATTUATORE 160Nm BAC x VAL.HP2'' MODULANTE",
+      "brand": "BELIMO",
+      "tipo": "MODULANTE",
+      "Nm": 160,
+      "alimentazione": "24V"
+    },
+    {
+      "codice": "25C3030",
+      "descrizione": "ATTUATORE WATERGATE ON-OFF",
+      "brand": "WATERGATE",
+      "tipo": "ON-OFF"
+    },
+    {
+      "codice": "25C303A",
+      "descrizione": "ATTUATORE WATERGATE MODULANTE 24V DC",
+      "brand": "WATERGATE",
+      "tipo": "MODULANTE",
+      "alimentazione": "24V DC"
+    },
+    {
+      "codice": "25C303B",
+      "descrizione": "ATTUATORE WATERGATE MODULANTE 230V AC",
+      "brand": "WATERGATE",
+      "tipo": "MODULANTE",
+      "alimentazione": "230V AC"
+    }
+  ],
+  "accoppiamenti": [
+    {
+      "modello": "GMC",
+      "tipologia": "NON MODULANTI",
+      "misura": "12 mm",
+      "valvole": {
+        "2": {
+          "codice": "25C176B",
+          "descrizione": "VAL. SFERA 12 mm 140 BAR GMC"
+        },
+        "3": null
+      },
+      "adattatore": "25C201D",
+      "opzioni": [
+        {
+          "kit": "25C491A",
+          "attuatore": "25C201P"
+        }
+      ]
+    },
+    {
+      "modello": "GMC",
+      "tipologia": "NON MODULANTI",
+      "misura": "16 mm",
+      "valvole": {
+        "2": {
+          "codice": "25C4480",
+          "descrizione": "VAL. SFERA 16 mm 140 BAR GMC"
+        },
+        "3": {
+          "codice": "25C281C",
+          "descrizione": "VAL. 3-VIE 16 mm 140 BAR GMC"
+        }
+      },
+      "adattatore": "25C201D",
+      "opzioni": [
+        {
+          "kit": "25C491A",
+          "attuatore": "25C201P"
+        }
+      ]
+    },
+    {
+      "modello": "GMC",
+      "tipologia": "NON MODULANTI",
+      "misura": "22 mm",
+      "valvole": {
+        "2": {
+          "codice": "25C4490",
+          "descrizione": "VAL. SFERA 22 mm 140 BAR GMC"
+        },
+        "3": {
+          "codice": "25C281D",
+          "descrizione": "VAL. 3-VIE 22 mm 140 BAR GMC"
+        }
+      },
+      "adattatore": "25C201D",
+      "opzioni": [
+        {
+          "kit": "25C4910",
+          "attuatore": "25C201P"
+        }
+      ]
+    },
+    {
+      "modello": "GMC",
+      "tipologia": "NON MODULANTI",
+      "misura": "28 mm",
+      "valvole": {
+        "2": {
+          "codice": "25C4500",
+          "descrizione": "VAL. SFERA 28 mm 140 BAR GMC"
+        },
+        "3": {
+          "codice": "25C281E",
+          "descrizione": "VAL. 3-VIE 28 mm 140 BAR GMC"
+        }
+      },
+      "adattatore": "25C201D",
+      "opzioni": [
+        {
+          "kit": "25C4910",
+          "attuatore": "25C201P"
+        }
+      ]
+    },
+    {
+      "modello": "GMC",
+      "tipologia": "NON MODULANTI",
+      "misura": "35 mm",
+      "valvole": {
+        "2": {
+          "codice": "25C4510",
+          "descrizione": "VAL. SFERA 35 mm 140 BAR GMC"
+        },
+        "3": {
+          "codice": "25C281F",
+          "descrizione": "VAL. 3-VIE 35 mm 140 BAR GMC"
+        }
+      },
+      "adattatore": "25C201C",
+      "opzioni": [
+        {
+          "kit": "25C4920",
+          "attuatore": "25C201Q"
+        }
+      ]
+    },
+    {
+      "modello": "GMC",
+      "tipologia": "NON MODULANTI",
+      "misura": "42 mm",
+      "valvole": {
+        "2": {
+          "codice": "25C4520",
+          "descrizione": "VAL. SFERA 42 mm 140 BAR GMC"
+        },
+        "3": {
+          "codice": "25C281B",
+          "descrizione": "VAL. 3-VIE 42 mm 140 BAR GMC"
+        }
+      },
+      "adattatore": "25C201C",
+      "opzioni": [
+        {
+          "kit": "25C4920",
+          "attuatore": "25C201Q"
+        }
+      ]
+    },
+    {
+      "modello": "GMC",
+      "tipologia": "NON MODULANTI",
+      "misura": "48 mm",
+      "valvole": {
+        "2": {
+          "codice": "25C452B",
+          "descrizione": "VAL. SFERA 48 mm 140 BAR GMC"
+        },
+        "3": {
+          "codice": "25C281G",
+          "descrizione": "VAL. 3-VIE 48 mm 140 BAR GMC"
+        }
+      },
+      "adattatore": "25C201C",
+      "opzioni": [
+        {
+          "kit": "25C4920",
+          "attuatore": "25C201Q"
+        }
+      ]
+    },
+    {
+      "modello": "GMC",
+      "tipologia": "NON MODULANTI",
+      "misura": "60 mm",
+      "valvole": {
+        "2": {
+          "codice": "25C452C",
+          "descrizione": "VAL. SFERA 60 mm 140 BAR GMC"
+        },
+        "3": {
+          "codice": "25C281H",
+          "descrizione": "VAL. 3-VIE 60 mm 140 BAR GMC"
+        }
+      },
+      "adattatore": "25C201N",
+      "opzioni": [
+        {
+          "kit": "25C492A",
+          "attuatore": "25C201R"
+        }
+      ]
+    },
+    {
+      "modello": "REF",
+      "tipologia": "NON MODULANTI",
+      "misura": "16 mm",
+      "valvole": {
+        "2": {
+          "codice": "25C1751",
+          "descrizione": "VAL. SFERA 16 mm 140 BAR REF"
+        },
+        "3": {
+          "codice": "25C3080",
+          "descrizione": "VAL. 3-VIE CO2 16 mm 140 BAR REF"
+        }
+      },
+      "adattatore": "25C201D",
+      "opzioni": [
+        {
+          "kit": "25C270B",
+          "attuatore": "25C201P"
+        }
+      ]
+    },
+    {
+      "modello": "REF",
+      "tipologia": "NON MODULANTI",
+      "misura": "1/2\"",
+      "valvole": {
+        "2": {
+          "codice": "25C0080",
+          "descrizione": "VAL. SFERA 304L CO2 1/2\" 130 BAR"
+        },
+        "3": {
+          "codice": "25C0150",
+          "descrizione": "VAL. 3-VIE 304L 1/2\" 130 BAR"
+        }
+      },
+      "adattatore": "25C201D",
+      "opzioni": [
+        {
+          "kit": "25C5040",
+          "attuatore": "25C201P"
+        },
+        {
+          "kit": "25C5030",
+          "attuatore": "25C201Q"
+        }
+      ]
+    },
+    {
+      "modello": "REF",
+      "tipologia": "NON MODULANTI",
+      "misura": "3/4\"",
+      "valvole": {
+        "2": {
+          "codice": "25C0070",
+          "descrizione": "VAL. SFERA 304L CO2 3/4\" 130 BAR"
+        },
+        "3": {
+          "codice": "25C0110",
+          "descrizione": "VAL. 3-VIE 304L 3/4\" 130 BAR"
+        }
+      },
+      "adattatore": "25C201D",
+      "opzioni": [
+        {
+          "kit": "25C5040",
+          "attuatore": "25C201P"
+        },
+        {
+          "kit": "25C5030",
+          "attuatore": "25C201Q"
+        }
+      ]
+    },
+    {
+      "modello": "REF",
+      "tipologia": "NON MODULANTI",
+      "misura": "1\"",
+      "valvole": {
+        "2": {
+          "codice": "25C0050",
+          "descrizione": "VAL. SFERA 304L CO2 1\" 130 BAR"
+        },
+        "3": {
+          "codice": "25C0100",
+          "descrizione": "VAL. 3-VIE 304L 1\" 130 BAR"
+        }
+      },
+      "adattatore": "25C201C",
+      "opzioni": [
+        {
+          "kit": "25C162A",
+          "attuatore": "25C201Q",
+          "navale": true
+        }
+      ]
+    },
+    {
+      "modello": "REF",
+      "tipologia": "NON MODULANTI",
+      "misura": "1 1/4\"",
+      "valvole": {
+        "2": {
+          "codice": "25C0060",
+          "descrizione": "VAL. SFERA 304L CO2 1 1/4\" 130 BAR"
+        },
+        "3": {
+          "codice": "25C0090",
+          "descrizione": "VAL. 3-VIE 304L 1 1/4\" 130 BAR"
+        }
+      },
+      "adattatore": "25C201C",
+      "opzioni": [
+        {
+          "kit": "25C162A",
+          "attuatore": "25C201Q",
+          "navale": true
+        }
+      ]
+    },
+    {
+      "modello": "REF",
+      "tipologia": "NON MODULANTI",
+      "misura": "1 1/2\"",
+      "valvole": {
+        "2": {
+          "codice": "25C3690",
+          "descrizione": "VAL. SFERA 304L CO2 1 1/2\" 130 BAR"
+        },
+        "3": {
+          "codice": "25C0310",
+          "descrizione": "VAL. 3-VIE 304L 1 1/2\" 130 BAR"
+        }
+      },
+      "adattatore": "25C201C",
+      "opzioni": [
+        {
+          "kit": "25C162A",
+          "attuatore": "25C201Q",
+          "navale": true
+        }
+      ]
+    },
+    {
+      "modello": "REF",
+      "tipologia": "NON MODULANTI",
+      "misura": "2\"",
+      "valvole": {
+        "2": {
+          "codice": "25C369A",
+          "descrizione": "VAL. SFERA 304L CO2 2\" 130 BAR"
+        },
+        "3": {
+          "codice": "25C009A",
+          "descrizione": "VAL. 3-VIE 304L 2\" 130 BAR"
+        }
+      },
+      "adattatore": "25C201N",
+      "opzioni": [
+        {
+          "kit": "25C4660",
+          "attuatore": "25C392A",
+          "vie": "2"
+        },
+        {
+          "kit": "25C162B",
+          "attuatore": "25C392A",
+          "vie": "3"
+        }
+      ]
+    },
+    {
+      "modello": "REF",
+      "tipologia": "NON MODULANTI",
+      "misura": "42 mm",
+      "valvole": {
+        "2": {
+          "codice": "25C2660",
+          "descrizione": "VAL. SFERA 42 mm 120 BAR"
+        },
+        "3": {
+          "codice": "25C2810",
+          "descrizione": "VAL. 3-VIE CO2 42 mm 120 BAR"
+        }
+      },
+      "adattatore": "25C201C",
+      "opzioni": [
+        {
+          "kit": "25C162A",
+          "attuatore": "25C201Q"
+        }
+      ]
+    },
+    {
+      "modello": "REF",
+      "tipologia": "MODULANTI",
+      "misura": "16 mm",
+      "valvole": {
+        "2": null,
+        "3": {
+          "codice": "25C038A",
+          "descrizione": "VAL. 3-VIE 16 mm 140 BAR V-PORT REFRIGERA"
+        }
+      },
+      "adattatore": "25C201D",
+      "opzioni": [
+        {
+          "kit": "25C270B",
+          "attuatore": "25C348A"
+        }
+      ]
+    },
+    {
+      "modello": "REF",
+      "tipologia": "MODULANTI",
+      "misura": "1/2\"",
+      "valvole": {
+        "2": null,
+        "3": {
+          "codice": "25C0440",
+          "descrizione": "VAL. 3-VIE 304L 1/2\" 130 BAR V-PORT"
+        }
+      },
+      "adattatore": "25C201D",
+      "opzioni": [
+        {
+          "kit": "25C5040",
+          "attuatore": "25C348A"
+        },
+        {
+          "kit": "25C5030",
+          "attuatore": "25C201F"
+        }
+      ]
+    },
+    {
+      "modello": "REF",
+      "tipologia": "MODULANTI",
+      "misura": "3/4\"",
+      "valvole": {
+        "2": {
+          "codice": "25C007C",
+          "descrizione": "VAL. SFERA 304L CO2 3/4\" MODULANTE"
+        },
+        "3": {
+          "codice": "25C007B",
+          "descrizione": "VAL. 3-VIE 304L 3/4\" 130 BAR V-PORT"
+        }
+      },
+      "adattatore": "25C201D",
+      "opzioni": [
+        {
+          "kit": "25C5040",
+          "attuatore": "25C348A"
+        },
+        {
+          "kit": "25C5030",
+          "attuatore": "25C201F"
+        }
+      ]
+    },
+    {
+      "modello": "REF",
+      "tipologia": "MODULANTI",
+      "misura": "1\"",
+      "valvole": {
+        "2": {
+          "codice": "25C005B",
+          "descrizione": "VAL. SFERA 304L CO2 1\" 120 BAR MODULANTE"
+        },
+        "3": {
+          "codice": "25C0420",
+          "descrizione": "VAL. 3-VIE 304L 1\" 130 BAR V-PORT"
+        }
+      },
+      "adattatore": "25C201C",
+      "opzioni": [
+        {
+          "kit": "25C162A",
+          "attuatore": "25C201F",
+          "navale": true
+        }
+      ]
+    },
+    {
+      "modello": "REF",
+      "tipologia": "MODULANTI",
+      "misura": "1 1/4\"",
+      "valvole": {
+        "2": {
+          "codice": "25C006B",
+          "descrizione": "VAL. 2-VIE CO2 1 1/4\" 130 BAR MODULANTE"
+        },
+        "3": {
+          "codice": "25C010B",
+          "descrizione": "VAL. 3-VIE 304L 1 1/4\" 130 BAR V-PORT"
+        }
+      },
+      "adattatore": "25C201C",
+      "opzioni": [
+        {
+          "kit": "25C162A",
+          "attuatore": "25C201F",
+          "navale": true
+        }
+      ]
+    },
+    {
+      "modello": "REF",
+      "tipologia": "MODULANTI",
+      "misura": "1 1/2\"",
+      "valvole": {
+        "2": {
+          "codice": "25C010E",
+          "descrizione": "VAL. 2-VIE CO2 1 1/2\" 120 BAR MODULANTE"
+        },
+        "3": {
+          "codice": "25C010D",
+          "descrizione": "VAL. 3-VIE 304L 1 1/2\" 130 BAR V-PORT"
+        }
+      },
+      "adattatore": "25C201C",
+      "opzioni": [
+        {
+          "kit": "25C162A",
+          "attuatore": "25C201F",
+          "navale": true
+        }
+      ]
+    },
+    {
+      "modello": "REF",
+      "tipologia": "MODULANTI",
+      "misura": "2\"",
+      "valvole": {
+        "2": {
+          "codice": "25C369L",
+          "descrizione": "VAL. SFERA 304L CO2 2\" 130 BAR MODULANTE"
+        },
+        "3": {
+          "codice": "25C4390",
+          "descrizione": "VAL. 3-VIE 304L 2\" 130 BAR V-PORT"
+        }
+      },
+      "adattatore": "25C201N",
+      "opzioni": [
+        {
+          "kit": "25C4660",
+          "attuatore": "25C4670",
+          "vie": "2"
+        },
+        {
+          "kit": "25C162B",
+          "attuatore": "25C4670",
+          "vie": "3"
+        }
+      ]
+    },
+    {
+      "modello": "REF",
+      "tipologia": "MODULANTI",
+      "misura": "42 mm",
+      "valvole": {
+        "2": null,
+        "3": {
+          "codice": "25C038F",
+          "descrizione": "VAL. 3-VIE 42 mm 140 BAR V-PORT REFRIGERA"
+        }
+      },
+      "adattatore": "25C201C",
+      "opzioni": [
+        {
+          "kit": "25C162A",
+          "attuatore": "25C201F"
+        }
+      ]
+    },
+    {
+      "modello": "REF WATERGATE",
+      "tipologia": "NON MODULANTI",
+      "misura": "16 mm",
+      "valvole": {
+        "2": {
+          "codice": "25C1751",
+          "descrizione": "VAL. SFERA 16 mm 140 BAR REF"
+        },
+        "3": {
+          "codice": "25C3080",
+          "descrizione": "VAL. 3-VIE CO2 16 mm 140 BAR REF"
+        }
+      },
+      "adattatore": null,
+      "opzioni": [
+        {
+          "kit": "25C270D",
+          "attuatore": "25C3030"
+        }
+      ]
+    },
+    {
+      "modello": "REF WATERGATE",
+      "tipologia": "NON MODULANTI",
+      "misura": "1/2\"",
+      "valvole": {
+        "2": {
+          "codice": "25C0080",
+          "descrizione": "VAL. SFERA 304L CO2 1/2\" 130 BAR"
+        },
+        "3": {
+          "codice": "25C0150",
+          "descrizione": "VAL. 3-VIE 304L 1/2\" 130 BAR"
+        }
+      },
+      "adattatore": null,
+      "opzioni": [
+        {
+          "kit": "25C5030",
+          "attuatore": "25C3030"
+        }
+      ]
+    },
+    {
+      "modello": "REF WATERGATE",
+      "tipologia": "NON MODULANTI",
+      "misura": "3/4\"",
+      "valvole": {
+        "2": {
+          "codice": "25C0070",
+          "descrizione": "VAL. SFERA 304L CO2 3/4\" 130 BAR"
+        },
+        "3": {
+          "codice": "25C0110",
+          "descrizione": "VAL. 3-VIE 304L 3/4\" 130 BAR"
+        }
+      },
+      "adattatore": null,
+      "opzioni": [
+        {
+          "kit": "25C5030",
+          "attuatore": "25C3030"
+        }
+      ]
+    },
+    {
+      "modello": "REF WATERGATE",
+      "tipologia": "NON MODULANTI",
+      "misura": "1\"",
+      "valvole": {
+        "2": {
+          "codice": "25C0050",
+          "descrizione": "VAL. SFERA 304L CO2 1\" 130 BAR"
+        },
+        "3": {
+          "codice": "25C0100",
+          "descrizione": "VAL. 3-VIE 304L 1\" 130 BAR"
+        }
+      },
+      "adattatore": null,
+      "opzioni": [
+        {
+          "kit": "25C162A",
+          "attuatore": "25C3030"
+        }
+      ]
+    },
+    {
+      "modello": "REF WATERGATE",
+      "tipologia": "NON MODULANTI",
+      "misura": "1 1/4\"",
+      "valvole": {
+        "2": {
+          "codice": "25C0060",
+          "descrizione": "VAL. SFERA 304L CO2 1 1/4\" 130 BAR"
+        },
+        "3": {
+          "codice": "25C0090",
+          "descrizione": "VAL. 3-VIE 304L 1 1/4\" 130 BAR"
+        }
+      },
+      "adattatore": null,
+      "opzioni": [
+        {
+          "kit": "25C162A",
+          "attuatore": "25C3030"
+        }
+      ]
+    },
+    {
+      "modello": "REF WATERGATE",
+      "tipologia": "NON MODULANTI",
+      "misura": "1 1/2\"",
+      "valvole": {
+        "2": {
+          "codice": "25C3690",
+          "descrizione": "VAL. SFERA 304L CO2 1 1/2\" 130 BAR"
+        },
+        "3": {
+          "codice": "25C0310",
+          "descrizione": "VAL. 3-VIE 304L 1 1/2\" 130 BAR"
+        }
+      },
+      "adattatore": null,
+      "opzioni": [
+        {
+          "kit": "25C162A",
+          "attuatore": "25C3030"
+        }
+      ]
+    },
+    {
+      "modello": "REF WATERGATE",
+      "tipologia": "MODULANTI 24V DC",
+      "misura": "16 mm",
+      "valvole": {
+        "2": null,
+        "3": {
+          "codice": "25C038A",
+          "descrizione": "VAL. 3-VIE 16 mm 140 BAR V-PORT REFRIGERA"
+        }
+      },
+      "adattatore": null,
+      "opzioni": [
+        {
+          "kit": "25C5030",
+          "attuatore": "25C303A"
+        }
+      ]
+    },
+    {
+      "modello": "REF WATERGATE",
+      "tipologia": "MODULANTI 24V DC",
+      "misura": "1/2\"",
+      "valvole": {
+        "2": null,
+        "3": {
+          "codice": "25C0440",
+          "descrizione": "VAL. 3-VIE 304L 1/2\" 130 BAR V-PORT"
+        }
+      },
+      "adattatore": null,
+      "opzioni": [
+        {
+          "kit": "25C5030",
+          "attuatore": "25C303A"
+        }
+      ]
+    },
+    {
+      "modello": "REF WATERGATE",
+      "tipologia": "MODULANTI 24V DC",
+      "misura": "3/4\"",
+      "valvole": {
+        "2": {
+          "codice": "25C007C",
+          "descrizione": "VAL. SFERA 304L CO2 3/4\" MODULANTE"
+        },
+        "3": {
+          "codice": "25C007B",
+          "descrizione": "VAL. 3-VIE 304L 3/4\" 130 BAR V-PORT"
+        }
+      },
+      "adattatore": null,
+      "opzioni": [
+        {
+          "kit": "25C5030",
+          "attuatore": "25C303A"
+        }
+      ]
+    },
+    {
+      "modello": "REF WATERGATE",
+      "tipologia": "MODULANTI 24V DC",
+      "misura": "1\"",
+      "valvole": {
+        "2": {
+          "codice": "25C005B",
+          "descrizione": "VAL. SFERA 304L CO2 1\" 120 BAR MODULANTE"
+        },
+        "3": {
+          "codice": "25C0420",
+          "descrizione": "VAL. 3-VIE 304L 1\" 130 BAR V-PORT"
+        }
+      },
+      "adattatore": null,
+      "opzioni": [
+        {
+          "kit": "25C162A",
+          "attuatore": "25C303A"
+        }
+      ]
+    },
+    {
+      "modello": "REF WATERGATE",
+      "tipologia": "MODULANTI 24V DC",
+      "misura": "1 1/4\"",
+      "valvole": {
+        "2": {
+          "codice": "25C006B",
+          "descrizione": "VAL. 2-VIE CO2 1 1/4\" 130 BAR MODULANTE"
+        },
+        "3": {
+          "codice": "25C010B",
+          "descrizione": "VAL. 3-VIE 304L 1 1/4\" 130 BAR V-PORT"
+        }
+      },
+      "adattatore": null,
+      "opzioni": [
+        {
+          "kit": "25C162A",
+          "attuatore": "25C303A"
+        }
+      ]
+    },
+    {
+      "modello": "REF WATERGATE",
+      "tipologia": "MODULANTI 24V DC",
+      "misura": "1 1/2\"",
+      "valvole": {
+        "2": {
+          "codice": "25C010E",
+          "descrizione": "VAL. 2-VIE CO2 1 1/2\" 120 BAR MODULANTE"
+        },
+        "3": {
+          "codice": "25C010D",
+          "descrizione": "VAL. 3-VIE 304L 1 1/2\" 130 BAR V-PORT"
+        }
+      },
+      "adattatore": null,
+      "opzioni": [
+        {
+          "kit": "25C162A",
+          "attuatore": "25C303A"
+        }
+      ]
+    },
+    {
+      "modello": "REF WATERGATE",
+      "tipologia": "MODULANTI 230V AC",
+      "misura": "16 mm",
+      "valvole": {
+        "2": null,
+        "3": {
+          "codice": "25C038A",
+          "descrizione": "VAL. 3-VIE 16 mm 140 BAR V-PORT REFRIGERA"
+        }
+      },
+      "adattatore": null,
+      "opzioni": [
+        {
+          "kit": "25C5030",
+          "attuatore": "25C303B"
+        }
+      ]
+    },
+    {
+      "modello": "REF WATERGATE",
+      "tipologia": "MODULANTI 230V AC",
+      "misura": "1/2\"",
+      "valvole": {
+        "2": null,
+        "3": {
+          "codice": "25C0440",
+          "descrizione": "VAL. 3-VIE 304L 1/2\" 130 BAR V-PORT"
+        }
+      },
+      "adattatore": null,
+      "opzioni": [
+        {
+          "kit": "25C5030",
+          "attuatore": "25C303B"
+        }
+      ]
+    },
+    {
+      "modello": "REF WATERGATE",
+      "tipologia": "MODULANTI 230V AC",
+      "misura": "3/4\"",
+      "valvole": {
+        "2": {
+          "codice": "25C007C",
+          "descrizione": "VAL. SFERA 304L CO2 3/4\" MODULANTE"
+        },
+        "3": {
+          "codice": "25C007B",
+          "descrizione": "VAL. 3-VIE 304L 3/4\" 130 BAR V-PORT"
+        }
+      },
+      "adattatore": null,
+      "opzioni": [
+        {
+          "kit": "25C5030",
+          "attuatore": "25C303B"
+        }
+      ]
+    },
+    {
+      "modello": "REF WATERGATE",
+      "tipologia": "MODULANTI 230V AC",
+      "misura": "1\"",
+      "valvole": {
+        "2": {
+          "codice": "25C005B",
+          "descrizione": "VAL. SFERA 304L CO2 1\" 120 BAR MODULANTE"
+        },
+        "3": {
+          "codice": "25C0420",
+          "descrizione": "VAL. 3-VIE 304L 1\" 130 BAR V-PORT"
+        }
+      },
+      "adattatore": null,
+      "opzioni": [
+        {
+          "kit": "25C162A",
+          "attuatore": "25C303B"
+        }
+      ]
+    },
+    {
+      "modello": "REF WATERGATE",
+      "tipologia": "MODULANTI 230V AC",
+      "misura": "1 1/4\"",
+      "valvole": {
+        "2": {
+          "codice": "25C006B",
+          "descrizione": "VAL. 2-VIE CO2 1 1/4\" 130 BAR MODULANTE"
+        },
+        "3": {
+          "codice": "25C010B",
+          "descrizione": "VAL. 3-VIE 304L 1 1/4\" 130 BAR V-PORT"
+        }
+      },
+      "adattatore": null,
+      "opzioni": [
+        {
+          "kit": "25C162A",
+          "attuatore": "25C303B"
+        }
+      ]
+    },
+    {
+      "modello": "REF WATERGATE",
+      "tipologia": "MODULANTI 230V AC",
+      "misura": "1 1/2\"",
+      "valvole": {
+        "2": {
+          "codice": "25C010E",
+          "descrizione": "VAL. 2-VIE CO2 1 1/2\" 120 BAR MODULANTE"
+        },
+        "3": {
+          "codice": "25C010D",
+          "descrizione": "VAL. 3-VIE 304L 1 1/2\" 130 BAR V-PORT"
+        }
+      },
+      "adattatore": null,
+      "opzioni": [
+        {
+          "kit": "25C162A",
+          "attuatore": "25C303B"
+        }
+      ]
+    }
+  ]
+}

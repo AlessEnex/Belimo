@@ -1,12 +1,13 @@
 // Esporta i dati mostrati nel box risultato in CSV
 function esportaRisultatoCSV() {
-  const kit = document.getElementById('kitInfo').innerText.trim();
-  const adattatore = document.getElementById('adattatoreInfo').innerText.trim();
-  const motore = document.getElementById('motoreInfo').innerText.trim();
+  const r = window.risultatoCorrente;
+  if (!r) return;
+  const testo = item => item ? `${item.codice} — ${item.descrizione || ''}` : 'Non richiesto';
   const rows = [
-    ['Kit', kit],
-    ['Adattatore', adattatore],
-    ['Motore', motore]
+    ['Valvola', testo(r.valvola)],
+    ['Kit', testo(r.kit)],
+    ['Adattatore', testo(r.adattatore)],
+    ['Motore', testo(r.motore)]
   ];
   let csv = rows.map(r => r.map(v => '"' + v.replace(/"/g, '""') + '"').join(',')).join('\n');
   const blob = new Blob([csv], { type: 'text/csv' });

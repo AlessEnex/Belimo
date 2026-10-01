@@ -34,18 +34,17 @@
         </div>
         <div id="puntoImpiantoInfoMsg" style="display:none;font-size:0.95em;color:#007aff;margin-bottom:10px;"></div>
         <h2>Selezione valvola</h2>
-        <label>Brand valvola</label>
-        <div id="brandValvolaTags" class="tag-row"></div>
-        <label>Corpo valvola</label>
-        <div id="materialeValvolaTags" class="tag-row"></div>
-        <label>Diametro valvola</label>
-        <div id="diametroValvolaTags" class="tag-row"></div>
-        <hr class="divider" />
-        <h2>Selezione motore</h2>
-        <label>Brand motore</label>
-        <div id="brandMotoreTags" class="tag-row"></div>
-        <label>Tipo motore</label>
-        <div id="tipoMotoreTags" class="tag-row"></div>
+        <label>Modello valvola</label>
+        <div id="modelloValvolaTags" class="tag-row"></div>
+        <label>Tipologia attuatore</label>
+        <div id="tipologiaTags" class="tag-row"></div>
+        <label>Misura</label>
+        <div id="misuraTags" class="tag-row"></div>
+        <label>Tipo valvola</label>
+        <div id="vieTags" class="tag-row"></div>
+        <label id="navaleBox" style="display:none;margin-top:8px;cursor:pointer;">
+          <input type="checkbox" id="navaleCheck" /> Macchina navale (kit INOX-NAVI)
+        </label>
         <p id="errore" class="error hidden"></p>
       </div>
       <div id="risultato" class="card col-dx hidden">
@@ -70,14 +69,14 @@
 
   <!-- Modal Recap configurazioni -->
   <div id="recapModal" style="display:none;position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(0,0,0,0.5);z-index:1000;align-items:center;justify-content:center;">
-    <div style="background:#1c1c1e;padding:32px 28px;border-radius:18px;min-width:400px;max-width:95vw;max-height:85vh;overflow:hidden;box-shadow:0 8px 48px rgba(0,0,0,0.6);border:1px solid #3a3a3c;display:flex;flex-direction:column;">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
-        <h2 style="margin:0;font-size:1.4em;">Regole di Mappatura</h2>
-        <button id="closeRecapBtn" style="background:transparent;border:none;color:#f2f2f7;font-size:1.5em;cursor:pointer;padding:0;width:32px;height:32px;">×</button>
+    <div style="background:#1c1c1e;padding:14px 16px;border-radius:14px;width:min(1600px,98vw);max-height:96vh;overflow:hidden;box-shadow:0 8px 48px rgba(0,0,0,0.6);border:1px solid #3a3a3c;display:flex;flex-direction:column;box-sizing:border-box;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+        <h2 style="margin:0;font-size:1.2em;">Regole di Mappatura</h2>
+        <button id="closeRecapBtn" style="background:transparent;border:none;color:#f2f2f7;font-size:1.5em;cursor:pointer;padding:0;width:32px;height:32px;">&times;</button>
       </div>
-      <div style="display:flex;gap:20px;flex:1;overflow:hidden;">
+      <div style="display:flex;gap:14px;flex:1;overflow:hidden;">
         <!-- Sidebar sinistra con liste articoli -->
-        <div style="width:320px;background:#2c2c2e;border:1px solid #3a3a3c;border-radius:12px;padding:16px;overflow-y:auto;">
+        <div class="recap-sidebar" style="width:220px;flex:0 0 220px;background:#2c2c2e;border:1px solid #3a3a3c;border-radius:8px;padding:10px;overflow-y:auto;">
           <h3 style="color:#007aff;font-size:1em;margin:0 0 12px 0;border-bottom:1px solid #3a3a3c;padding-bottom:6px;">Articoli disponibili</h3>
           <div id="articoliDisponibili"></div>
         </div>

@@ -1,149 +1,153 @@
 // Array per le configurazioni salvate
 window.configurazioniSalvate = [];
-// Kit selezionato quando ci sono multiple opzioni
+// Opzione kit/attuatore selezionata quando ci sono multiple opzioni
 window.kitSelezionato = null;
-// Caricamento dati valvole e motori e inizializzazione UI a tag
-let valvole = [];
-let motori = [];
-let kit = [];
-let adattatori = [];
-let mappaKit = {};
-let mappaMotore = {};
-let mappaAdattatore = {};
+window.motoreSelezionato = null;
+// Risultato mostrato a video (usato da salvataggio ed export)
+window.risultatoCorrente = null;
+
+// Dati caricati da data/accoppiamenti.json (tabella accoppiamenti valvole-motori)
+let dati = { modelli: {}, kit: [], adattatori: [], attuatori: [], accoppiamenti: [] };
+
+const VIE_TESTO = { '2': '2-VIE', '3': '3-VIE' };
+
+function escapeHtml(value) {
+	return String(value ?? '')
+		.replace(/&/g, '&amp;')
+		.replace(/</g, '&lt;')
+		.replace(/>/g, '&gt;')
+		.replace(/"/g, '&quot;')
+		.replace(/'/g, '&#039;');
+}
+
+function renderRecapPills(items, type, emptyLabel = 'N/A') {
+	if (!items || items.length === 0) {
+		return `<span class="recap-pill recap-pill-empty">${emptyLabel}</span>`;
+	}
+
+	return items.map(item => {
+		const code = item.codice || item.code || item;
+		const meta = item.meta || item.descrizione || item.description || '';
+		return `
+			<span class="recap-pill recap-pill-${type}" title="${escapeHtml(meta || code)}">
+				<span class="recap-pill-code">${escapeHtml(code)}</span>
+				${meta ? `<span class="recap-pill-meta">${escapeHtml(meta)}</span>` : ''}
+			</span>
+		`;
+	}).join('');
+}
+
+function trovaKit(codice) {
+	return dati.kit.find(k => k.codice === codice) || { codice, descrizione: '' };
+}
+
+function trovaAdattatore(codice) {
+	return codice ? (dati.adattatori.find(a => a.codice === codice) || { codice, descrizione: '' }) : null;
+}
+
+function trovaAttuatore(codice) {
+	return dati.attuatori.find(a => a.codice === codice) || { codice, descrizione: '' };
+}
+
+function testoArticolo(item) {
+	return item ? `${item.codice} — ${item.descrizione || ''}` : '';
+}
+
+// Opzioni kit+attuatore valide per la riga e le vie scelte (con sostituzione kit navale)
+function opzioniPerVie(riga, vie, navale) {
+	return riga.opzioni
+		.filter(o => !o.vie || o.vie === vie)
+		.map(o => ({
+			kit: trovaKit(navale && o.navale ? dati.kitNavale : o.kit),
+			attuatore: trovaAttuatore(o.attuatore)
+		}));
+}
 
 async function caricaDati() {
-	const [valvoleRes, motoriRes, kitRes, adattatoriRes, mappaKitRes, mappaMotoreRes, mappaAdattatoreRes, puntiImpiantoRes] = await Promise.all([
-		fetch('data/valvole.json'),
-		fetch('data/motori.json'),
-		fetch('data/kit.json'),
-		fetch('data/adattatori.json'),
-		fetch('data/mappa_valvola_kit.json'),
-		fetch('data/mappa_valvola_motore.json'),
-		fetch('data/mappa_valvola_adattatore.json'),
+	const [accoppiamentiRes, puntiImpiantoRes] = await Promise.all([
+		fetch('data/accoppiamenti.json'),
 		fetch('data/punti_impianto.json')
 	]);
-	valvole = (await valvoleRes.json()).valvole;
-	motori = (await motoriRes.json()).motori;
-	kit = (await kitRes.json()).kit;
-	adattatori = (await adattatoriRes.json()).adattatori;
-	mappaKit = (await mappaKitRes.json()).mappa;
-	mappaMotore = (await mappaMotoreRes.json()).mappa;
-	mappaAdattatore = (await mappaAdattatoreRes.json()).mappa;
+	dati = await accoppiamentiRes.json();
 	window.puntiImpianto = (await puntiImpiantoRes.json()).punti || [];
 }
 
 function getSelezioneCorrente() {
+	const s = window.statoSelezione || {};
 	return {
 		puntoImpianto: document.getElementById('puntoImpiantoSelect')?.value || '',
-		brandValvola: window.statoSelezione?.brandValvola,
-		materialeValvola: window.statoSelezione?.materialeValvola,
-		diametroValvola: window.statoSelezione?.diametroValvola,
-		brandMotore: window.statoSelezione?.brandMotore,
-		tipoMotore: window.statoSelezione?.tipoMotore
+		modello: s.modello,
+		tipologia: s.tipologia,
+		misura: s.misura,
+		vie: s.vie,
+		navale: !!s.navale
 	};
 }
 
 function mostraRisultatoAutomatico() {
 	const s = getSelezioneCorrente();
 	// Serve tutto selezionato
-	if (!s.brandValvola || !s.materialeValvola || !s.diametroValvola || !s.brandMotore || !s.tipoMotore) {
+	if (!s.modello || !s.tipologia || !s.misura || !s.vie) {
 		document.getElementById('risultato').classList.add('hidden');
+		nascondiErrore();
+		window.risultatoCorrente = null;
 		return;
 	}
-	// Trova la valvola
-	const valvola = valvole.find(v => v.brand === s.brandValvola && v.materiale === s.materialeValvola && String(v.diametro) === String(s.diametroValvola));
+	const riga = dati.accoppiamenti.find(r => r.modello === s.modello && r.tipologia === s.tipologia && r.misura === s.misura);
+	const valvola = riga?.valvole[s.vie];
 	if (!valvola) {
-		mostraErrore('Nessuna valvola trovata per la combinazione selezionata.');
+		mostraErrore('Nessuna valvola disponibile per la combinazione selezionata.');
 		return;
 	}
-	// Key per le mappe
-	const baseKey = `${s.brandValvola}_${s.materialeValvola}_${s.diametroValvola}`;
-	const key = s.brandMotore === 'WATERGATE' ? `${baseKey}_WATERGATE` : baseKey;
-	// Kit
-	const kitCodes = mappaKit[key] || [];
-	const kitObjects = kitCodes.map(kc => kit.find(k => k.codice === kc)).filter(Boolean);
-	// Motori
-	const motoriCodes = mappaMotore[key] || [];
-	const motoriCompatibili = motoriCodes.map(mc => motori.find(m => m.codice === mc)).filter(Boolean);
-	const motoriDelTipo = motoriCompatibili.filter(m => m.brand === s.brandMotore && m.tipo === s.tipoMotore);
-	// Adattatore
-	let adattatoreCodice = null;
-	if (s.brandMotore !== 'WATERGATE') adattatoreCodice = mappaAdattatore[baseKey] || null;
-	const adattatoreObj = adattatoreCodice ? adattatori.find(a => a.codice === adattatoreCodice) : null;
-	if (!motoriDelTipo || motoriDelTipo.length === 0) {
-		mostraErrore('Nessun motore trovato per questa combinazione di brand/tipo.');
+	const opzioni = opzioniPerVie(riga, s.vie, s.navale);
+	if (opzioni.length === 0) {
+		mostraErrore('Nessun kit/attuatore configurato per questa combinazione.');
 		return;
 	}
-	renderRisultato({ valvola, adattatoreObj, kitObjects, motoriDelTipo });
+	renderRisultato({ valvola, adattatoreObj: trovaAdattatore(riga.adattatore), opzioni });
 }
 
-function renderRisultato({ valvola, adattatoreObj, kitObjects, motoriDelTipo }) {
+function renderRisultato({ valvola, adattatoreObj, opzioni }) {
 	const risultato = document.getElementById('risultato');
 	const valvolaInfo = document.getElementById('valvolaInfo');
 	const kitInfo = document.getElementById('kitInfo');
 	const adattatoreInfo = document.getElementById('adattatoreInfo');
 	const motoreInfo = document.getElementById('motoreInfo');
 
-	valvolaInfo.innerHTML = '';
+	valvolaInfo.innerHTML = `<p><strong>Valvola:</strong> <span class="code">${escapeHtml(valvola.codice)}</span> — ${escapeHtml(valvola.descrizione)}</p>`;
 
-	if (kitObjects.length > 1) {
-		// Più kit disponibili: mostra radio button per scegliere
-		const righe = kitObjects.map((k, idx) => `
+	adattatoreInfo.innerHTML = adattatoreObj
+		? `<p><strong>Adattatore:</strong> <span class="code">${escapeHtml(adattatoreObj.codice)}</span> — ${escapeHtml(adattatoreObj.descrizione)}</p>`
+		: `<p><strong>Adattatore:</strong> non richiesto.</p>`;
+
+	const mostraMotore = opzione => {
+		const a = opzione.attuatore;
+		motoreInfo.innerHTML = `<p><strong>Attuatore:</strong> <span class="code">${escapeHtml(a.codice)}</span> — ${escapeHtml(a.descrizione)}</p>`;
+		window.kitSelezionato = opzione.kit;
+		window.motoreSelezionato = a;
+		window.risultatoCorrente = { valvola, adattatore: adattatoreObj, kit: opzione.kit, motore: a };
+	};
+
+	if (opzioni.length > 1) {
+		// Più kit disponibili: ogni kit ha il suo attuatore
+		const righe = opzioni.map((o, idx) => `
 			<label style="display:block;margin:6px 0;cursor:pointer;">
-				<input type="radio" name="kitChoice" value="${k.codice}" ${idx === 0 ? 'checked' : ''}>
-				<span class="code">${k.codice}</span> — ${k.descrizione || ''}
+				<input type="radio" name="kitChoice" value="${idx}" ${idx === 0 ? 'checked' : ''}>
+				<span class="code">${escapeHtml(o.kit.codice)}</span> — ${escapeHtml(o.kit.descrizione)}
+				<span style="opacity:0.7;">→ attuatore ${escapeHtml(o.attuatore.codice)}</span>
 			</label>
 		`).join('');
 		kitInfo.innerHTML = '<p style="font-weight:600;margin-bottom:8px;">Scegli un kit:</p>' + righe;
-		// Imposta il kit selezionato di default
-		window.kitSelezionato = kitObjects[0];
-		// Aggiungi listener per il cambio di selezione
-		setTimeout(() => {
-			document.querySelectorAll('input[name="kitChoice"]').forEach(radio => {
-				radio.addEventListener('change', function() {
-					window.kitSelezionato = kitObjects.find(k => k.codice === this.value);
-				});
+		kitInfo.querySelectorAll('input[name="kitChoice"]').forEach(radio => {
+			radio.addEventListener('change', function() {
+				mostraMotore(opzioni[Number(this.value)]);
 			});
-		}, 0);
-	} else if (kitObjects.length === 1) {
-		// Un solo kit: mostra normalmente
-		kitInfo.innerHTML = `<p><span class="code">${kitObjects[0].codice}</span> — ${kitObjects[0].descrizione || ''}</p>`;
-		window.kitSelezionato = kitObjects[0];
+		});
 	} else {
-		kitInfo.innerHTML = `<p>Nessun kit configurato per questa combinazione.</p>`;
-		window.kitSelezionato = null;
+		const k = opzioni[0].kit;
+		kitInfo.innerHTML = `<p><strong>Kit:</strong> <span class="code">${escapeHtml(k.codice)}</span> — ${escapeHtml(k.descrizione)}</p>`;
 	}
-
-	if (adattatoreObj) {
-		adattatoreInfo.innerHTML = `<p><span class="code">${adattatoreObj.codice}</span> — ${adattatoreObj.descrizione || ''}</p>`;
-	} else {
-		adattatoreInfo.innerHTML = `<p>Non richiesto.</p>`;
-	}
-
-	// Motori: se più di uno, mostra radio button
-	if (motoriDelTipo.length > 1) {
-		const righe = motoriDelTipo.map((m, idx) => `
-			<label style="display:block;margin:6px 0;cursor:pointer;">
-				<input type="radio" name="motoreChoice" value="${m.codice}" ${idx === 0 ? 'checked' : ''}>
-				<span class="code">${m.codice}</span> — ${m.descrizione || m.tipo + ' ' + (m.Nm ? m.Nm + 'Nm' : '')}
-			</label>
-		`).join('');
-		motoreInfo.innerHTML = '<p style="font-weight:600;margin-bottom:8px;">Scegli un motore:</p>' + righe;
-		// Imposta il motore selezionato di default
-		window.motoreSelezionato = motoriDelTipo[0];
-		// Aggiungi listener per il cambio di selezione
-		setTimeout(() => {
-			document.querySelectorAll('input[name="motoreChoice"]').forEach(radio => {
-				radio.addEventListener('change', function() {
-					window.motoreSelezionato = motoriDelTipo.find(m => m.codice === this.value);
-				});
-			});
-		}, 0);
-	} else if (motoriDelTipo.length === 1) {
-		// Un solo motore: mostra normalmente
-		motoreInfo.innerHTML = `<p><span class="code">${motoriDelTipo[0].codice}</span> — ${motoriDelTipo[0].descrizione || motoriDelTipo[0].tipo + ' ' + (motoriDelTipo[0].Nm ? motoriDelTipo[0].Nm + 'Nm' : '')}</p>`;
-		window.motoreSelezionato = motoriDelTipo[0];
-	}
+	mostraMotore(opzioni[0]);
 
 	risultato.classList.remove('hidden');
 	nascondiErrore();
@@ -161,6 +165,7 @@ function mostraErrore(msg) {
 	el.textContent = msg;
 	el.classList.remove('hidden');
 	document.getElementById('risultato').classList.add('hidden');
+	window.risultatoCorrente = null;
 	// Nascondi il pulsante esporta CSV
 	const exportBtn = document.getElementById('exportCsvBtn');
 	if (exportBtn) exportBtn.style.display = 'none';
@@ -178,7 +183,8 @@ function nascondiErrore() {
 
 document.addEventListener('DOMContentLoaded', async () => {
 	await caricaDati();
-	if (window.initTagUI) window.initTagUI(valvole, motori);
+	window.onSelezioneCambiata = mostraRisultatoAutomatico;
+	if (window.initTagUI) window.initTagUI(dati);
 	// Popola la select punto di impianto
 	const select = document.getElementById('puntoImpiantoSelect');
 	const infoIcon = document.getElementById('puntoImpiantoInfoIcon');
@@ -205,12 +211,6 @@ document.addEventListener('DOMContentLoaded', async () => {
 			};
 		}
 	}
-	// Aggancia la funzione di autocalcolo ai cambiamenti dei tag
-	document.body.addEventListener('click', e => {
-		if (e.target.classList.contains('tag-btn') && !e.target.classList.contains('disabled')) {
-			setTimeout(mostraRisultatoAutomatico, 0);
-		}
-	});
 
 	// Collega il pulsante esporta CSV
 	const exportBtn = document.getElementById('exportCsvBtn');
@@ -232,18 +232,14 @@ document.addEventListener('DOMContentLoaded', async () => {
 	const saveBtn = document.getElementById('saveConfigBtn');
 	if (saveBtn) {
 		saveBtn.addEventListener('click', () => {
-			// Usa il motore selezionato se disponibile
-			const motoreScelto = window.motoreSelezionato;
-			const motore = motoreScelto ? `${motoreScelto.codice} — ${motoreScelto.descrizione || motoreScelto.tipo + ' ' + (motoreScelto.Nm ? motoreScelto.Nm + 'Nm' : '')}` : document.getElementById('motoreInfo').innerText.trim();
-			// Usa il kit selezionato se disponibile, altrimenti prendi il testo
-			const kit = window.kitSelezionato ? `${window.kitSelezionato.codice} — ${window.kitSelezionato.descrizione || ''}` : document.getElementById('kitInfo').innerText.trim();
-			const adattatore = document.getElementById('adattatoreInfo').innerText.trim();
-			const selezione = getSelezioneCorrente();
+			const r = window.risultatoCorrente;
+			if (!r) return;
 			window.configurazioniSalvate.push({
-				...selezione,
-				kit,
-				adattatore,
-				motore
+				...getSelezioneCorrente(),
+				valvola: testoArticolo(r.valvola),
+				kit: testoArticolo(r.kit),
+				adattatore: r.adattatore ? testoArticolo(r.adattatore) : '',
+				motore: testoArticolo(r.motore)
 			});
 			aggiornaTabellaConfigurazioni();
 		});
@@ -274,197 +270,101 @@ document.addEventListener('DOMContentLoaded', async () => {
 	}
 });
 
-// Mostra tutte le regole di mappatura disponibili nei JSON
+// Mostra la tabella accoppiamenti valvole-motori
 function mostraRecapConfigurazione() {
 	const recapContent = document.getElementById('recapContent');
 	const articoliBox = document.getElementById('articoliDisponibili');
 	if (!recapContent) return;
-	
-	if (!valvole || valvole.length === 0) {
+
+	if (!dati.accoppiamenti || dati.accoppiamenti.length === 0) {
 		recapContent.innerHTML = '<p style="color:#8e8e93;text-align:center;padding:20px;">Dati non ancora caricati.</p>';
 		return;
 	}
 
 	// Popola la sidebar con articoli disponibili
 	if (articoliBox) {
-		let sidebarHtml = '';
-		
-		// Valvole
-		sidebarHtml += '<div style="margin-bottom:16px;"><h4 style="color:#007aff;font-size:0.9em;margin:0 0 8px 0;">Valvole</h4>';
-		sidebarHtml += '<div style="font-size:0.8em;color:#8e8e93;line-height:1.6;">';
-		valvole.forEach(v => {
-			sidebarHtml += `<div>${v.brand} ${v.materiale} ${v.diametro}mm</div>`;
-		});
-		sidebarHtml += '</div></div>';
-		
-		// Kit
-		sidebarHtml += '<div style="margin-bottom:16px;"><h4 style="color:#007aff;font-size:0.9em;margin:0 0 8px 0;">Kit</h4>';
-		sidebarHtml += '<div style="font-size:0.8em;color:#8e8e93;line-height:1.6;">';
-		kit.forEach(k => {
-			sidebarHtml += `<div><strong>${k.codice}</strong> - ${k.descrizione}</div>`;
-		});
-		sidebarHtml += '</div></div>';
-		
-		// Motori
-		sidebarHtml += '<div style="margin-bottom:16px;"><h4 style="color:#007aff;font-size:0.9em;margin:0 0 8px 0;">Motori</h4>';
-		sidebarHtml += '<div style="font-size:0.8em;color:#8e8e93;line-height:1.6;">';
-		motori.forEach(m => {
-			sidebarHtml += `<div><strong>${m.codice}</strong> - ${m.brand} ${m.tipo}</div>`;
-		});
-		sidebarHtml += '</div></div>';
-		
-		// Adattatori
-		sidebarHtml += '<div style="margin-bottom:16px;"><h4 style="color:#007aff;font-size:0.9em;margin:0 0 8px 0;">Adattatori</h4>';
-		sidebarHtml += '<div style="font-size:0.8em;color:#8e8e93;line-height:1.6;">';
-		adattatori.forEach(a => {
-			sidebarHtml += `<div><strong>${a.codice}</strong> - ${a.descrizione}</div>`;
-		});
-		sidebarHtml += '</div></div>';
-		
-		articoliBox.innerHTML = sidebarHtml;
+		const sezione = (titolo, items) => `
+			<div style="margin-bottom:16px;"><h4 style="color:#007aff;font-size:0.9em;margin:0 0 8px 0;">${titolo}</h4>
+			<div style="font-size:0.8em;color:#8e8e93;line-height:1.6;">
+				${items.map(i => `<div><strong>${escapeHtml(i.codice)}</strong> - ${escapeHtml(i.descrizione)}</div>`).join('')}
+			</div></div>`;
+		articoliBox.innerHTML =
+			sezione('Kit', dati.kit) +
+			sezione('Attuatori', dati.attuatori) +
+			sezione('Adattatori', dati.adattatori);
 	}
 
-	let html = '<div style="margin-bottom:16px;text-align:right;"><button id="salvaJsonBtn" style="padding:8px 16px;background:#28a745;color:#fff;border:none;border-radius:8px;font-size:0.9rem;font-weight:500;cursor:pointer;">Salva modifiche JSON</button></div>';
-	html += '<div style="margin-bottom:20px;">';
-	
-	// Raggruppa per brand
-	const gruppi = {};
-	valvole.forEach(v => {
-		if (!gruppi[v.brand]) gruppi[v.brand] = [];
-		gruppi[v.brand].push(v);
-	});
+	let html = `
+		<div class="recap-toolbar">
+			<div class="recap-count">${dati.accoppiamenti.length} righe — ${escapeHtml(dati.fonte || '')}</div>
+			<div class="recap-legend">
+				<span class="recap-pill recap-pill-brand"><span class="recap-pill-code">BELIMO</span></span>
+				<span class="recap-pill recap-pill-watergate"><span class="recap-pill-code">WATERGATE</span></span>
+				<span class="recap-pill recap-pill-onoff"><span class="recap-pill-code">ON-OFF</span></span>
+				<span class="recap-pill recap-pill-modulating"><span class="recap-pill-code">MODULANTE</span></span>
+			</div>
+		</div>
+		<div class="recap-table-wrap">
+			<table class="recap-rules-table">
+				<thead>
+					<tr>
+						<th>Misura</th>
+						<th>Valvola 2-vie</th>
+						<th>Valvola 3-vie</th>
+						<th>Adattatore</th>
+						<th>Kit attuatore</th>
+						<th>Attuatore</th>
+					</tr>
+				</thead>
+				<tbody>
+	`;
 
-	Object.keys(gruppi).sort().forEach(brand => {
-		html += `<div style="margin-bottom:24px;">`;
-		html += `<h3 style="color:#007aff;font-size:1.15em;margin-bottom:12px;border-bottom:1px solid #3a3a3c;padding-bottom:6px;">${brand}</h3>`;
-		
-		gruppi[brand].forEach(v => {
-			const key = `${v.brand}_${v.materiale}_${v.diametro}`;
-			const keyWatergate = `${key}_WATERGATE`;
-			
-			// Kit con codice e descrizione
-			const kitCodes = mappaKit[key] || [];
-			const kitDisplay = kitCodes.map(kc => {
-				const k = kit.find(x => x.codice === kc);
-				return k ? `${k.codice} - ${k.descrizione}` : kc;
-			}).join(' | ');
-			const kitEditValue = kitCodes.join(', ');
-			
-			// Motori con codice, brand e tipo
-			const motoriCodes = mappaMotore[key] || [];
-			const motoriWatergateCodes = mappaMotore[keyWatergate] || [];
-			const allMotoriCodes = [...new Set([...motoriCodes, ...motoriWatergateCodes])];
-			const motoriDisplay = allMotoriCodes.map(mc => {
-				const m = motori.find(x => x.codice === mc);
-				return m ? `${m.codice} - ${m.brand} ${m.tipo}` : mc;
-			}).join(' | ');
-			const motoriEditValue = allMotoriCodes.join(', ');
-			
-			// Adattatore con codice e descrizione
-			const adattatoreCode = mappaAdattatore[key] || '';
-			const adattatoreDisplay = adattatoreCode ? (() => {
-				const a = adattatori.find(x => x.codice === adattatoreCode);
-				return a ? `${a.codice} - ${a.descrizione}` : adattatoreCode;
-			})() : '';
-			
-			html += `
-				<div style="background:#2c2c2e;border:1px solid #3a3a3c;border-radius:8px;padding:12px;margin-bottom:10px;" data-key="${key}">
-					<div style="font-weight:600;color:#f2f2f7;margin-bottom:8px;">${v.materiale} ${v.diametro}mm</div>
-					<div style="font-size:0.9em;line-height:1.8;">
-						<div style="margin-bottom:8px;">
-							<strong style="color:#f2f2f7;">Kit:</strong>
-							<div style="color:#8e8e93;font-size:0.85em;margin:4px 0;">${kitDisplay || 'N/A'}</div>
-							<input type="text" class="edit-kit" value="${kitEditValue}" style="width:100%;padding:4px 8px;background:#1c1c1e;border:1px solid #3a3a3c;border-radius:6px;color:#f2f2f7;font-size:0.9em;" placeholder="es: 25C162A, 25C162C">
-						</div>
-						<div style="margin-bottom:8px;">
-							<strong style="color:#f2f2f7;">Motori:</strong>
-							<div style="color:#8e8e93;font-size:0.85em;margin:4px 0;">${motoriDisplay || 'N/A'}</div>
-							<input type="text" class="edit-motori" value="${motoriEditValue}" style="width:100%;padding:4px 8px;background:#1c1c1e;border:1px solid #3a3a3c;border-radius:6px;color:#f2f2f7;font-size:0.9em;" placeholder="es: 25C201Q, 25C201F">
-						</div>
-						<div>
-							<strong style="color:#f2f2f7;">Adattatore:</strong>
-							<div style="color:#8e8e93;font-size:0.85em;margin:4px 0;">${adattatoreDisplay || 'N/A'}</div>
-							<input type="text" class="edit-adattatore" value="${adattatoreCode}" style="width:100%;padding:4px 8px;background:#1c1c1e;border:1px solid #3a3a3c;border-radius:6px;color:#f2f2f7;font-size:0.9em;" placeholder="es: 25C201C">
-						</div>
-					</div>
-				</div>
-			`;
+	let gruppoCorrente = '';
+	dati.accoppiamenti.forEach(r => {
+		const gruppo = `${dati.modelli?.[r.modello] || r.modello} — ${r.tipologia}`;
+		if (gruppo !== gruppoCorrente) {
+			gruppoCorrente = gruppo;
+			html += `<tr class="recap-brand-row"><td colspan="6">${escapeHtml(gruppo)}</td></tr>`;
+		}
+		const adattatore = trovaAdattatore(r.adattatore);
+		const kitItems = r.opzioni.map(o => {
+			const k = trovaKit(o.kit);
+			const note = [o.vie ? `solo ${VIE_TESTO[o.vie]}` : '', o.navale ? `navale: ${dati.kitNavale}` : ''].filter(Boolean).join(' · ');
+			return { codice: k.codice, descrizione: note ? `${k.descrizione} (${note})` : k.descrizione };
 		});
-		
-		html += `</div>`;
+		const attuatoriHtml = r.opzioni.map(o => {
+			const a = trovaAttuatore(o.attuatore);
+			return `
+				<div class="recap-pair">
+					<span class="recap-pill ${a.brand === 'WATERGATE' ? 'recap-pill-watergate' : 'recap-pill-brand'}" title="${escapeHtml(a.descrizione)}">
+						<span class="recap-pill-code">${escapeHtml(a.codice)}</span>
+						<span class="recap-pill-meta">${escapeHtml(a.descrizione)}</span>
+					</span>
+					<span class="recap-pill ${a.tipo === 'MODULANTE' ? 'recap-pill-modulating' : 'recap-pill-onoff'}" title="${escapeHtml(a.tipo || 'N/A')}">
+						<span class="recap-pill-code">${a.tipo === 'MODULANTE' ? 'MOD' : escapeHtml(a.tipo || 'N/A')}</span>
+					</span>
+				</div>`;
+		}).join('');
+
+		html += `
+			<tr>
+				<td class="recap-valve-cell"><div class="recap-valve-title">${escapeHtml(r.misura)}</div></td>
+				<td><div class="recap-pill-stack">${renderRecapPills(r.valvole['2'] ? [r.valvole['2']] : [], 'geometry', 'NA')}</div></td>
+				<td><div class="recap-pill-stack">${renderRecapPills(r.valvole['3'] ? [r.valvole['3']] : [], 'vport', 'NA')}</div></td>
+				<td><div class="recap-pill-stack">${renderRecapPills(adattatore ? [adattatore] : [], 'adapter', 'Non richiesto')}</div></td>
+				<td><div class="recap-pill-stack">${renderRecapPills(kitItems, 'kit')}</div></td>
+				<td><div class="recap-pill-stack">${attuatoriHtml}</div></td>
+			</tr>
+		`;
 	});
-	
-	html += '</div>';
+
+	html += `
+				</tbody>
+			</table>
+		</div>
+		<p style="font-size:0.85em;color:#8e8e93;margin-top:10px;">(*) Se macchina navale usare kit INOX-NAVI codice ${escapeHtml(dati.kitNavale || '')} al posto di 25C162A.</p>
+	`;
 	recapContent.innerHTML = html;
-	
-	// Collega il pulsante salva
-	setTimeout(() => {
-		const salvaBtn = document.getElementById('salvaJsonBtn');
-		if (salvaBtn) {
-			salvaBtn.addEventListener('click', salvaModificheJson);
-		}
-	}, 0);
-}
-
-// Salva le modifiche ai JSON
-function salvaModificheJson() {
-	const cards = document.querySelectorAll('[data-key]');
-	
-	cards.forEach(card => {
-		const key = card.getAttribute('data-key');
-		const kitInput = card.querySelector('.edit-kit').value.trim();
-		const motoriInput = card.querySelector('.edit-motori').value.trim();
-		const adattatoreInput = card.querySelector('.edit-adattatore').value.trim();
-		
-		// Aggiorna kit
-		if (kitInput) {
-			mappaKit[key] = kitInput.split(',').map(s => s.trim()).filter(Boolean);
-		} else {
-			delete mappaKit[key];
-		}
-		
-		// Aggiorna motori
-		if (motoriInput) {
-			mappaMotore[key] = motoriInput.split(',').map(s => s.trim()).filter(Boolean);
-		} else {
-			delete mappaMotore[key];
-		}
-		
-		// Aggiorna adattatore
-		if (adattatoreInput) {
-			mappaAdattatore[key] = adattatoreInput;
-		} else {
-			delete mappaAdattatore[key];
-		}
-	});
-	
-	// Prepara i JSON per il download
-	const jsonKit = JSON.stringify({ mappa: mappaKit }, null, 2);
-	const jsonMotore = JSON.stringify({ mappa: mappaMotore }, null, 2);
-	const jsonAdattatore = JSON.stringify({ mappa: mappaAdattatore }, null, 2);
-	
-	// Download mappa_valvola_kit.json
-	downloadJson(jsonKit, 'mappa_valvola_kit.json');
-	
-	// Download mappa_valvola_motore.json
-	setTimeout(() => downloadJson(jsonMotore, 'mappa_valvola_motore.json'), 200);
-	
-	// Download mappa_valvola_adattatore.json
-	setTimeout(() => downloadJson(jsonAdattatore, 'mappa_valvola_adattatore.json'), 400);
-	
-	alert('JSON modificati scaricati! Sostituisci i file nella cartella data/ per applicare le modifiche.');
-}
-
-function downloadJson(content, filename) {
-	const blob = new Blob([content], { type: 'application/json' });
-	const url = URL.createObjectURL(blob);
-	const a = document.createElement('a');
-	a.href = url;
-	a.download = filename;
-	document.body.appendChild(a);
-	a.click();
-	document.body.removeChild(a);
-	URL.revokeObjectURL(url);
 }
 
 function aggiornaTabellaConfigurazioni() {
@@ -482,11 +382,11 @@ function aggiornaTabellaConfigurazioni() {
 	// Righe
 	window.configurazioniSalvate.forEach(cfg => {
 		table.innerHTML += `<tr>
-			<td>${cfg.puntoImpianto || ''}</td>
-			<td>${cfg.brandValvola || ''} ${cfg.materialeValvola || ''} ${cfg.diametroValvola || ''}</td>
-			<td>${cfg.motore || ''}</td>
-			<td>${cfg.kit || ''}</td>
-			<td>${cfg.adattatore || ''}</td>
+			<td>${escapeHtml(cfg.puntoImpianto)}</td>
+			<td>${escapeHtml(cfg.valvola)}</td>
+			<td>${escapeHtml(cfg.motore)}</td>
+			<td>${escapeHtml(cfg.kit)}</td>
+			<td>${escapeHtml(cfg.adattatore || 'Non richiesto')}</td>
 		</tr>`;
 	});
 }
@@ -494,29 +394,22 @@ function aggiornaTabellaConfigurazioni() {
 // Esporta tutte le configurazioni salvate in un unico CSV
 function esportaTutteConfigurazioniCSV() {
 	if (configurazioniSalvate.length === 0) return;
-	// Raggruppa articoli (kit, adattatore, motore) e somma le quantità
+	// Raggruppa articoli (valvola, kit, adattatore, motore) e somma le quantità
 	const articoli = {};
+	const aggiungi = (tipo, descrizione) => {
+		if (!descrizione) return;
+		if (!articoli[descrizione]) articoli[descrizione] = { tipo, descrizione, quantita: 1 };
+		else articoli[descrizione].quantita++;
+	};
 	configurazioniSalvate.forEach(cfg => {
-		// Kit
-		if (cfg.kit && cfg.kit !== 'Nessun kit configurato per questa combinazione.') {
-			const k = cfg.kit;
-			if (!articoli[k]) articoli[k] = { tipo: 'Kit', descrizione: k, quantita: 1 };
-			else articoli[k].quantita++;
-		}
-		// Adattatore
-		if (cfg.adattatore && cfg.adattatore !== 'Non richiesto.') {
-			const a = cfg.adattatore;
-			if (!articoli[a]) articoli[a] = { tipo: 'Adattatore', descrizione: a, quantita: 1 };
-			else articoli[a].quantita++;
-		}
-		// Motore
-		if (cfg.motore) {
-			const m = cfg.motore;
-			if (!articoli[m]) articoli[m] = { tipo: 'Motore', descrizione: m, quantita: 1 };
-			else articoli[m].quantita++;
-		}
+		aggiungi('Valvola', cfg.valvola);
+		aggiungi('Kit', cfg.kit);
+		aggiungi('Adattatore', cfg.adattatore);
+		aggiungi('Motore', cfg.motore);
 	});
 	mostraCsvArticoliPreviewModal(articoli);
+}
+
 // Mostra il modal di preview con lista articoli e quantità
 function mostraCsvArticoliPreviewModal(articoli) {
 	const modal = document.getElementById('csvPreviewModal');
@@ -526,7 +419,7 @@ function mostraCsvArticoliPreviewModal(articoli) {
 	let html = '<table style="width:100%;text-align:left;font-size:1.05em;">';
 	html += '<tr><th>Articolo</th><th>Quantità</th></tr>';
 	Object.values(articoli).forEach(a => {
-		html += `<tr><td>${a.descrizione}</td><td style="text-align:center;">${a.quantita}</td></tr>`;
+		html += `<tr><td>${escapeHtml(a.descrizione)}</td><td style="text-align:center;">${a.quantita}</td></tr>`;
 	});
 	html += '</table>';
 	tableBox.innerHTML = html;
@@ -558,52 +451,6 @@ function esportaCsvArticoli(articoli) {
 	const a = document.createElement('a');
 	a.href = url;
 	a.download = 'articoli.csv';
-	document.body.appendChild(a);
-	a.click();
-	document.body.removeChild(a);
-	URL.revokeObjectURL(url);
-}
-}
-
-// Mostra il modal di preview CSV
-function mostraCsvPreviewModal(header, rows) {
-	const modal = document.getElementById('csvPreviewModal');
-	const tableBox = document.getElementById('csvPreviewTableBox');
-	if (!modal || !tableBox) return;
-	// Costruisci la tabella HTML
-	let html = '<table style="width:100%;text-align:left;font-size:0.98em;">';
-	html += '<tr>' + header.map(h => `<th>${h}</th>`).join('') + '</tr>';
-	rows.forEach(r => {
-		html += '<tr>' + r.map(v => `<td>${v}</td>`).join('') + '</tr>';
-	});
-	html += '</table>';
-	tableBox.innerHTML = html;
-	modal.style.display = 'flex';
-
-	// Gestione pulsanti
-	const btnConferma = document.getElementById('csvPreviewConfirmBtn');
-	const btnAnnulla = document.getElementById('csvPreviewCancelBtn');
-	if (btnConferma) {
-		btnConferma.onclick = function() {
-			esportaCsvDati(header, rows);
-			modal.style.display = 'none';
-		};
-	}
-	if (btnAnnulla) {
-		btnAnnulla.onclick = function() {
-			modal.style.display = 'none';
-		};
-	}
-}
-
-// Esporta i dati CSV (header + rows)
-function esportaCsvDati(header, rows) {
-	let csv = [header, ...rows].map(r => r.map(v => '"' + String(v).replace(/"/g, '""') + '"').join(',')).join('\n');
-	const blob = new Blob([csv], { type: 'text/csv' });
-	const url = URL.createObjectURL(blob);
-	const a = document.createElement('a');
-	a.href = url;
-	a.download = 'configurazioni.csv';
 	document.body.appendChild(a);
 	a.click();
 	document.body.removeChild(a);

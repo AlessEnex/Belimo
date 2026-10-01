@@ -15,7 +15,7 @@ function esportaRiepilogoPDF() {
   const headers = [['Punto impianto', 'Valvola', 'Motore', 'Perno/Kit', 'Adattatore']];
   const rows = configurazioniSalvate.map(cfg => [
     cfg.puntoImpianto || '',
-    (cfg.brandValvola || '') + '\n' + (cfg.materialeValvola || '') + '\n' + (cfg.diametroValvola || ''),
+    (cfg.valvola || '').replace(' — ', '\n'),
     (cfg.motore || '').replace(' — ', '\n'),
     (cfg.kit || '').replace(' — ', '\n'),
     (cfg.adattatore || '').replace(' — ', '\n')
