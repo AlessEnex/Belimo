@@ -114,15 +114,21 @@ function renderRisultato({ valvola, adattatoreObj, opzioni }) {
 	const adattatoreInfo = document.getElementById('adattatoreInfo');
 	const motoreInfo = document.getElementById('motoreInfo');
 
-	valvolaInfo.innerHTML = `<p><strong>Valvola:</strong> <span class="code">${escapeHtml(valvola.codice)}</span> — ${escapeHtml(valvola.descrizione)}</p>`;
+	// Riga della tabella risultato: etichetta | codice | descrizione
+	const resRow = (label, item, vuoto = '—') => `
+		<div class="res-row">
+			<span class="res-label">${label}</span>
+			${item
+				? `<span class="code">${escapeHtml(item.codice)}</span><span class="res-desc">${escapeHtml(item.descrizione)}</span>`
+				: `<span class="res-desc res-muted">${vuoto}</span>`}
+		</div>`;
 
-	adattatoreInfo.innerHTML = adattatoreObj
-		? `<p><strong>Adattatore:</strong> <span class="code">${escapeHtml(adattatoreObj.codice)}</span> — ${escapeHtml(adattatoreObj.descrizione)}</p>`
-		: `<p><strong>Adattatore:</strong> non richiesto.</p>`;
+	valvolaInfo.innerHTML = resRow('Valvola', valvola);
+	adattatoreInfo.innerHTML = resRow('Adattatore', adattatoreObj, 'Non richiesto');
 
 	const mostraMotore = opzione => {
 		const a = opzione.attuatore;
-		motoreInfo.innerHTML = `<p><strong>Attuatore:</strong> <span class="code">${escapeHtml(a.codice)}</span> — ${escapeHtml(a.descrizione)}</p>`;
+		motoreInfo.innerHTML = resRow('Attuatore', a);
 		window.kitSelezionato = opzione.kit;
 		window.motoreSelezionato = a;
 		window.risultatoCorrente = { valvola, adattatore: adattatoreObj, kit: opzione.kit, motore: a };
@@ -131,21 +137,25 @@ function renderRisultato({ valvola, adattatoreObj, opzioni }) {
 	if (opzioni.length > 1) {
 		// Più kit disponibili: ogni kit ha il suo attuatore
 		const righe = opzioni.map((o, idx) => `
-			<label style="display:block;margin:6px 0;cursor:pointer;">
+			<label class="kit-option">
 				<input type="radio" name="kitChoice" value="${idx}" ${idx === 0 ? 'checked' : ''}>
-				<span class="code">${escapeHtml(o.kit.codice)}</span> — ${escapeHtml(o.kit.descrizione)}
-				<span style="opacity:0.7;">→ attuatore ${escapeHtml(o.attuatore.codice)}</span>
+				<span class="code">${escapeHtml(o.kit.codice)}</span>
+				<span class="res-desc">${escapeHtml(o.kit.descrizione)}</span>
+				<span class="res-muted">→ ${escapeHtml(o.attuatore.codice)}</span>
 			</label>
 		`).join('');
-		kitInfo.innerHTML = '<p style="font-weight:600;margin-bottom:8px;">Scegli un kit:</p>' + righe;
+		kitInfo.innerHTML = `
+			<div class="res-row res-row-top">
+				<span class="res-label">Kit</span>
+				<div class="kit-options">${righe}</div>
+			</div>`;
 		kitInfo.querySelectorAll('input[name="kitChoice"]').forEach(radio => {
 			radio.addEventListener('change', function() {
 				mostraMotore(opzioni[Number(this.value)]);
 			});
 		});
 	} else {
-		const k = opzioni[0].kit;
-		kitInfo.innerHTML = `<p><strong>Kit:</strong> <span class="code">${escapeHtml(k.codice)}</span> — ${escapeHtml(k.descrizione)}</p>`;
+		kitInfo.innerHTML = resRow('Kit', opzioni[0].kit);
 	}
 	mostraMotore(opzioni[0]);
 
@@ -277,17 +287,16 @@ function mostraRecapConfigurazione() {
 	if (!recapContent) return;
 
 	if (!dati.accoppiamenti || dati.accoppiamenti.length === 0) {
-		recapContent.innerHTML = '<p style="color:#8e8e93;text-align:center;padding:20px;">Dati non ancora caricati.</p>';
+		recapContent.innerHTML = '<p class="res-muted">Dati non ancora caricati.</p>';
 		return;
 	}
 
 	// Popola la sidebar con articoli disponibili
 	if (articoliBox) {
 		const sezione = (titolo, items) => `
-			<div style="margin-bottom:16px;"><h4 style="color:#007aff;font-size:0.9em;margin:0 0 8px 0;">${titolo}</h4>
-			<div style="font-size:0.8em;color:#8e8e93;line-height:1.6;">
-				${items.map(i => `<div><strong>${escapeHtml(i.codice)}</strong> - ${escapeHtml(i.descrizione)}</div>`).join('')}
-			</div></div>`;
+			<div class="side-group"><h4>${titolo}</h4>
+				${items.map(i => `<div class="side-item"><span class="side-code">${escapeHtml(i.codice)}</span>${escapeHtml(i.descrizione)}</div>`).join('')}
+			</div>`;
 		articoliBox.innerHTML =
 			sezione('Kit', dati.kit) +
 			sezione('Attuatori', dati.attuatori) +
@@ -297,12 +306,6 @@ function mostraRecapConfigurazione() {
 	let html = `
 		<div class="recap-toolbar">
 			<div class="recap-count">${dati.accoppiamenti.length} righe — ${escapeHtml(dati.fonte || '')}</div>
-			<div class="recap-legend">
-				<span class="recap-pill recap-pill-brand"><span class="recap-pill-code">BELIMO</span></span>
-				<span class="recap-pill recap-pill-watergate"><span class="recap-pill-code">WATERGATE</span></span>
-				<span class="recap-pill recap-pill-onoff"><span class="recap-pill-code">ON-OFF</span></span>
-				<span class="recap-pill recap-pill-modulating"><span class="recap-pill-code">MODULANTE</span></span>
-			</div>
 		</div>
 		<div class="recap-table-wrap">
 			<table class="recap-rules-table">
@@ -362,7 +365,7 @@ function mostraRecapConfigurazione() {
 				</tbody>
 			</table>
 		</div>
-		<p style="font-size:0.85em;color:#8e8e93;margin-top:10px;">(*) Se macchina navale usare kit INOX-NAVI codice ${escapeHtml(dati.kitNavale || '')} al posto di 25C162A.</p>
+		<p class="recap-footnote">(*) Se macchina navale usare kit INOX-NAVI codice ${escapeHtml(dati.kitNavale || '')} al posto di 25C162A.</p>
 	`;
 	recapContent.innerHTML = html;
 }
@@ -378,17 +381,20 @@ function aggiornaTabellaConfigurazioni() {
 	}
 	box.style.display = '';
 	// Header
-	table.innerHTML = `<tr><th>Punto impianto</th><th>Valvola</th><th>Motore</th><th>Perno/Kit</th><th>Adattatore</th></tr>`;
+	table.innerHTML = `<thead><tr><th>#</th><th>Punto impianto</th><th>Valvola</th><th>Adattatore</th><th>Kit</th><th>Attuatore</th></tr></thead>`;
 	// Righe
-	window.configurazioniSalvate.forEach(cfg => {
-		table.innerHTML += `<tr>
-			<td>${escapeHtml(cfg.puntoImpianto)}</td>
-			<td>${escapeHtml(cfg.valvola)}</td>
-			<td>${escapeHtml(cfg.motore)}</td>
-			<td>${escapeHtml(cfg.kit)}</td>
-			<td>${escapeHtml(cfg.adattatore || 'Non richiesto')}</td>
-		</tr>`;
-	});
+	const cella = testo => {
+		const [codice, ...resto] = String(testo || '').split(' — ');
+		return codice ? `<span class="code">${escapeHtml(codice)}</span> ${escapeHtml(resto.join(' — '))}` : '<span class="res-muted">Non richiesto</span>';
+	};
+	table.innerHTML += '<tbody>' + window.configurazioniSalvate.map((cfg, i) => `<tr>
+		<td class="num">${i + 1}</td>
+		<td>${escapeHtml(cfg.puntoImpianto) || '<span class="res-muted">—</span>'}</td>
+		<td>${cella(cfg.valvola)}</td>
+		<td>${cella(cfg.adattatore)}</td>
+		<td>${cella(cfg.kit)}</td>
+		<td>${cella(cfg.motore)}</td>
+	</tr>`).join('') + '</tbody>';
 }
 
 // Esporta tutte le configurazioni salvate in un unico CSV
@@ -416,10 +422,10 @@ function mostraCsvArticoliPreviewModal(articoli) {
 	const tableBox = document.getElementById('csvPreviewTableBox');
 	if (!modal || !tableBox) return;
 	// Costruisci la lista HTML
-	let html = '<table style="width:100%;text-align:left;font-size:1.05em;">';
-	html += '<tr><th>Articolo</th><th>Quantità</th></tr>';
+	let html = '<table class="data-table">';
+	html += '<thead><tr><th>Articolo</th><th class="num">Q.tà</th></tr></thead>';
 	Object.values(articoli).forEach(a => {
-		html += `<tr><td>${escapeHtml(a.descrizione)}</td><td style="text-align:center;">${a.quantita}</td></tr>`;
+		html += `<tr><td>${escapeHtml(a.descrizione)}</td><td class="num">${a.quantita}</td></tr>`;
 	});
 	html += '</table>';
 	tableBox.innerHTML = html;

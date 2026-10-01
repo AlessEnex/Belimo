@@ -1,14 +1,3 @@
-  <!-- Modal preview CSV -->
-  <div id="csvPreviewModal" style="display:none;position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(0,0,0,0.32);z-index:1000;align-items:center;justify-content:center;">
-    <div style="background:#222;padding:28px 24px 18px 24px;border-radius:18px;min-width:340px;max-width:90vw;max-height:80vh;overflow:auto;box-shadow:0 8px 32px #000a;">
-      <h2 style="margin-top:0;font-size:1.2em;">Preview esportazione CSV</h2>
-      <div id="csvPreviewTableBox"></div>
-      <div style="margin-top:18px;text-align:right;">
-        <button id="csvPreviewCancelBtn" style="margin-right:12px;">Annulla</button>
-        <button id="csvPreviewConfirmBtn" style="background:#007aff;color:#fff;">Esporta CSV</button>
-      </div>
-    </div>
-  </div>
 <!DOCTYPE html>
 <html lang="it">
 <head>
@@ -19,69 +8,112 @@
 </head>
 <body>
 
-  <div class="app-container two-col-layout">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
-      <button id="toggleRecapBtn" style="padding:8px 16px;background:#5e5ce6;color:#fff;border:none;border-radius:8px;font-size:0.9rem;font-weight:500;cursor:pointer;">Mostra Regole</button>
-      <a href="https://alessenex.github.io/Dashboard_tools/" target="_blank" style="display:inline-block;padding:8px 16px;background:#007aff;color:#fff;text-decoration:none;border-radius:8px;font-size:0.9rem;font-weight:500;">Dashboard Tools</a>
+  <header class="topbar">
+    <div class="topbar-title">
+      <span class="topbar-name">Valve &amp; Actuator Selector</span>
+      <span class="topbar-sub">Accoppiamenti valvole – attuatori</span>
     </div>
-    <h1>Valve & Actuator Selector</h1>
-    <div class="main-flex">
-      <div class="card col-sx">
-        <label for="puntoImpiantoSelect" style="font-weight:600;margin-bottom:6px;">Punto di impianto</label>
-        <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
-          <select id="puntoImpiantoSelect" style="flex:1;max-width:320px;"></select>
-          <span id="puntoImpiantoInfoIcon" title="" style="display:none;cursor:pointer;font-size:1.2em;color:#007aff;">&#9432;</span>
+    <div class="topbar-actions">
+      <button id="toggleRecapBtn" class="btn btn-secondary">Tabella regole</button>
+      <a href="https://alessenex.github.io/Dashboard_tools/" target="_blank" class="btn btn-secondary">Dashboard Tools</a>
+    </div>
+  </header>
+
+  <main class="layout">
+    <section class="panel">
+      <div class="panel-head">Selezione</div>
+      <div class="panel-body">
+        <div class="field">
+          <label for="puntoImpiantoSelect">Punto di impianto</label>
+          <div class="field-inline">
+            <select id="puntoImpiantoSelect"></select>
+            <span id="puntoImpiantoInfoIcon" class="info-icon" title="" style="display:none;">&#9432;</span>
+          </div>
+          <div id="puntoImpiantoInfoMsg" class="info-msg" style="display:none;"></div>
         </div>
-        <div id="puntoImpiantoInfoMsg" style="display:none;font-size:0.95em;color:#007aff;margin-bottom:10px;"></div>
-        <h2>Selezione valvola</h2>
-        <label>Modello valvola</label>
-        <div id="modelloValvolaTags" class="tag-row"></div>
-        <label>Tipologia attuatore</label>
-        <div id="tipologiaTags" class="tag-row"></div>
-        <label>Misura</label>
-        <div id="misuraTags" class="tag-row"></div>
-        <label>Tipo valvola</label>
-        <div id="vieTags" class="tag-row"></div>
-        <label id="navaleBox" style="display:none;margin-top:8px;cursor:pointer;">
+        <div class="field">
+          <label>Modello valvola</label>
+          <div id="modelloValvolaTags" class="tag-row"></div>
+        </div>
+        <div class="field">
+          <label>Tipologia attuatore</label>
+          <div id="tipologiaTags" class="tag-row"></div>
+        </div>
+        <div class="field">
+          <label>Misura</label>
+          <div id="misuraTags" class="tag-row"></div>
+        </div>
+        <div class="field">
+          <label>Tipo valvola</label>
+          <div id="vieTags" class="tag-row"></div>
+        </div>
+        <label id="navaleBox" class="check" style="display:none;">
           <input type="checkbox" id="navaleCheck" /> Macchina navale (kit INOX-NAVI)
         </label>
         <p id="errore" class="error hidden"></p>
       </div>
-      <div id="risultato" class="card col-dx hidden">
-        <h2>Risultato</h2>
-        <div id="valvolaInfo"></div>
-        <div id="kitInfo"></div>
-        <div id="adattatoreInfo"></div>
-        <div id="motoreInfo"></div>
-        <button id="saveConfigBtn" style="margin-top:18px;display:none;">Salva configurazione</button>
-        <button id="exportCsvBtn" style="margin-top:8px;display:none;">Esporta CSV</button>
-        <div id="configListBox" style="margin-top:24px;display:none;">
-          <h3>Configurazioni salvate</h3>
-          <table id="configListTable" style="width:100%;font-size:0.95em;"></table>
-          <div style="display:flex;gap:10px;margin-top:10px;">
-            <button id="exportAllCsvBtn">Esporta tutte in CSV</button>
-            <button id="exportSummaryPdfBtn">Salva riepilogo</button>
+    </section>
+
+    <section class="panel result-panel">
+      <div class="panel-head">Risultato</div>
+      <div class="panel-body">
+        <div class="result-empty">Completa la selezione per vedere valvola, adattatore, kit e attuatore.</div>
+        <div id="risultato" class="hidden">
+          <div class="res-table">
+            <div id="valvolaInfo"></div>
+            <div id="adattatoreInfo"></div>
+            <div id="kitInfo"></div>
+            <div id="motoreInfo"></div>
+          </div>
+          <div class="actions">
+            <button id="saveConfigBtn" class="btn btn-primary" style="display:none;">Aggiungi alla lista</button>
+            <button id="exportCsvBtn" class="btn btn-secondary" style="display:none;">Esporta CSV</button>
           </div>
         </div>
+      </div>
+    </section>
+
+    <section id="configListBox" class="panel saved-panel" style="display:none;">
+      <div class="panel-head">
+        <span>Configurazioni salvate</span>
+        <div class="actions actions-inline">
+          <button id="exportAllCsvBtn" class="btn btn-secondary">Esporta CSV</button>
+          <button id="exportSummaryPdfBtn" class="btn btn-secondary">Riepilogo PDF</button>
+        </div>
+      </div>
+      <div class="panel-body panel-body-flush">
+        <table id="configListTable" class="data-table"></table>
+      </div>
+    </section>
+  </main>
+
+  <!-- Modal tabella regole -->
+  <div id="recapModal" class="modal" style="display:none;">
+    <div class="modal-box modal-wide">
+      <div class="modal-head">
+        <h2>Tabella regole di accoppiamento</h2>
+        <button id="closeRecapBtn" class="btn-close" aria-label="Chiudi">&times;</button>
+      </div>
+      <div class="modal-content">
+        <aside class="recap-sidebar">
+          <div class="recap-sidebar-title">Articoli disponibili</div>
+          <div id="articoliDisponibili"></div>
+        </aside>
+        <div id="recapContent" class="recap-main"></div>
       </div>
     </div>
   </div>
 
-  <!-- Modal Recap configurazioni -->
-  <div id="recapModal" style="display:none;position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(0,0,0,0.5);z-index:1000;align-items:center;justify-content:center;">
-    <div style="background:#1c1c1e;padding:14px 16px;border-radius:14px;width:min(1600px,98vw);max-height:96vh;overflow:hidden;box-shadow:0 8px 48px rgba(0,0,0,0.6);border:1px solid #3a3a3c;display:flex;flex-direction:column;box-sizing:border-box;">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
-        <h2 style="margin:0;font-size:1.2em;">Regole di Mappatura</h2>
-        <button id="closeRecapBtn" style="background:transparent;border:none;color:#f2f2f7;font-size:1.5em;cursor:pointer;padding:0;width:32px;height:32px;">&times;</button>
+  <!-- Modal preview CSV -->
+  <div id="csvPreviewModal" class="modal" style="display:none;">
+    <div class="modal-box">
+      <div class="modal-head">
+        <h2>Anteprima esportazione CSV</h2>
       </div>
-      <div style="display:flex;gap:14px;flex:1;overflow:hidden;">
-        <!-- Sidebar sinistra con liste articoli -->
-        <div class="recap-sidebar" style="width:220px;flex:0 0 220px;background:#2c2c2e;border:1px solid #3a3a3c;border-radius:8px;padding:10px;overflow-y:auto;">
-          <h3 style="color:#007aff;font-size:1em;margin:0 0 12px 0;border-bottom:1px solid #3a3a3c;padding-bottom:6px;">Articoli disponibili</h3>
-          <div id="articoliDisponibili"></div>
-        </div>
-        <!-- Contenuto principale -->
-        <div style="flex:1;overflow-y:auto;" id="recapContent"></div>
+      <div id="csvPreviewTableBox" class="modal-scroll"></div>
+      <div class="actions actions-end">
+        <button id="csvPreviewCancelBtn" class="btn btn-secondary">Annulla</button>
+        <button id="csvPreviewConfirmBtn" class="btn btn-primary">Esporta CSV</button>
       </div>
     </div>
   </div>
