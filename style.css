@@ -976,11 +976,34 @@ body {
 .topbar-sub { color: var(--muted); }
 
 .layout {
-  grid-template-columns: minmax(380px, 480px) minmax(0, 1fr);
+  grid-template-columns: minmax(560px, 1.65fr) minmax(340px, 0.75fr);
   gap: 24px;
   max-width: 1800px;
   padding: 28px 32px;
 }
+
+/* Selettore compatto: etichetta a sinistra, controllo a destra */
+.layout > .panel:first-child .field {
+  display: grid;
+  grid-template-columns: 132px minmax(0, 1fr);
+  align-items: start;
+  gap: 12px;
+}
+
+.layout > .panel:first-child .field + .field { margin-top: 14px; }
+
+.layout > .panel:first-child .field > label {
+  margin: 0;
+  padding-top: 7px;
+}
+
+.layout > .panel:first-child .field-inline,
+.layout > .panel:first-child .field > .tag-row,
+.layout > .panel:first-child .field > div:not(.field-inline) {
+  min-width: 0;
+}
+
+.layout > .panel:first-child .field-inline { grid-column: 2; }
 
 .panel,
 .modal-box,
@@ -1120,4 +1143,6 @@ select:focus,
 @media (max-width: 900px) {
   .topbar { height: auto; min-height: 56px; padding: 10px 16px; }
   .layout { gap: 14px; padding: 16px; }
+  .layout > .panel:first-child .field { display: block; }
+  .layout > .panel:first-child .field > label { margin-bottom: 5px; padding-top: 0; }
 }
