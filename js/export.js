@@ -5,6 +5,7 @@ function esportaRisultatoCSV() {
   const testo = item => item ? `${item.codice} — ${item.descrizione || ''}` : 'Non richiesto';
   const rows = [
     ['Combinazione', r.combinazione ? r.combinazione.codice : 'Nessun codice in matrice'],
+    ['Selezione', testoSelezione(r)],
     ['Valvola', testo(r.valvola)],
     ['Kit', testo(r.kit)],
     ['Adattatore', testo(r.adattatore)],

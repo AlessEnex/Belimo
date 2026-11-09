@@ -9,6 +9,7 @@ const S = {
 	filtroMarca: null,
 	matriceModello: null,
 	matriceStato: 'tutte',
+	mosaicoCodice: null,
 	importSql: null,
 	sqlTesto: null
 };
@@ -690,6 +691,58 @@ function vistaMatrice() {
 		</section>`;
 }
 
+// ---------------------------------------------------------------- mosaico combinazioni
+function vistaMosaico() {
+	const lista = D.matrice.filter(m => (!S.matriceModello || m.modello === S.matriceModello)
+		&& (S.matriceStato === 'tutte'
+			|| (S.matriceStato === 'dacompilare' && !m.codice_pdm)
+			|| (S.matriceStato === 'compilate' && m.codice_pdm)));
+	const selezionata = lista.find(m => m.codice === S.mosaicoCodice) || null;
+	const modelli = D.modelliOrdine.filter(mo => D.matrice.some(m => m.modello === mo));
+	const gruppi = [];
+	lista.forEach(m => {
+		const chiave = `${serieRiga(m)}|${m.tipologia}`;
+		let g = gruppi.find(x => x.chiave === chiave);
+		if (!g) gruppi.push(g = { chiave, titolo: `${serieRiga(m)} — ${m.tipologia}`, righe: [] });
+		g.righe.push(m);
+	});
+	const dettaglio = selezionata ? `<div class="mosaic-selection" aria-live="polite">
+		<span class="mosaic-selection-label">Selezionata</span>
+		${tag(selezionata.codice, 'pill-cmb')}
+		${valvolaPill(selezionata.valvola, false)}
+		${kitPill(selezionata.kit, false)}
+		${attuatorePill(selezionata.attuatore, false)}
+		${selezionata.codice_pdm ? tag(`PDM ${selezionata.codice_pdm}`, 'pill-ok') : tag('PDM da compilare', 'pill-gap')}
+	</div>` : '';
+	const colore = m => famiglia(m.modello) === 'GMC' ? 'mosaic-gmc' : famiglia(m.modello) === 'REF' ? 'mosaic-ref' : 'mosaic-other';
+	return `
+		<section class="panel db-section"><div class="panel-body">
+			<p class="db-hint">Un quadratino corrisponde a una combinazione fisica. I gruppi mostrano a colpo d’occhio dove si concentrano le alternative; il tratteggio indica un codice PDM ancora da compilare.</p>
+			<div class="pill-wrap">
+				${tag(`${lista.length} combinazioni`)}
+				${tag(`${lista.filter(m => m.codice_pdm).length} con PDM`, 'pill-ok')}
+				${tag(`${lista.filter(m => !m.codice_pdm).length} senza PDM`, 'pill-gap')}
+			</div>
+			${dettaglio}
+		</div></section>
+		${legendaColori(['valvole'])}
+		<section class="panel">
+			<div class="filter-row mosaic-filter-row">
+				<button class="tag-btn ${!S.matriceModello ? 'selected' : ''}" data-mmodello="">Tutti i modelli</button>
+				${modelli.map(mo => `<button class="tag-btn ${S.matriceModello === mo ? 'selected' : ''}" data-mmodello="${h(mo)}">${h(etichetta(mo))}</button>`).join('')}
+			</div>
+			<div class="filter-row mosaic-filter-row">
+				${[['tutte', 'Tutte'], ['dacompilare', 'PDM da compilare'], ['compilate', 'PDM compilato']].map(([k, l]) =>
+					`<button class="tag-btn ${S.matriceStato === k ? 'selected' : ''}" data-mstato="${k}">${l}</button>`).join('')}
+			</div>
+			<div class="mosaic-groups">
+				${gruppi.map(g => `<section class="mosaic-group"><div class="mosaic-group-head"><span>${h(g.titolo)}</span><span>${g.righe.length}</span></div>
+					<div class="mosaic-grid">${g.righe.map(m => `<button type="button" class="mosaic-tile ${colore(m)} ${m.codice_pdm ? 'is-pdm' : 'is-uncompiled'} ${S.mosaicoCodice === m.codice ? 'is-selected' : ''}" data-mosaic="${h(m.codice || '')}" title="${h([m.codice || 'Senza codice', m.misura, VIE_LABEL[m.vie], D.valvole[m.valvola]?.descrizione || m.valvola, m.codice_pdm ? `PDM: ${m.codice_pdm}` : 'PDM da compilare'].join(' · '))}" aria-label="${h([m.codice || 'Senza codice', m.misura, `${VIE_LABEL[m.vie]}`, m.codice_pdm ? 'PDM compilato' : 'PDM da compilare'].join(', '))}">${h(m.codice ? m.codice.replace('CMB-', '') : '—')}</button>`).join('')}</div>
+				</section>`).join('')}
+			</div>
+		</section>`;
+}
+
 // SheetJS caricato solo quando serve
 function caricaXlsx() {
 	if (window.XLSX) return Promise.resolve(window.XLSX);
@@ -844,6 +897,7 @@ const TABS = {
 	articoli: ['Kit · Attuatori · Adattatori', vistaArticoli, () => Object.keys(D.kit).length + Object.keys(D.attuatori).length + Object.keys(D.adattatori).length],
 	punti: ['Punti impianto', vistaPunti, () => D.punti.length],
 	matrice: ['Matrice CAD/PDM', vistaMatrice, () => D.matrice.length],
+	mosaico: ['Mosaico combinazioni', vistaMosaico, () => D.matrice.length],
 	sql: ['SQL', vistaSql, () => null]
 };
 
@@ -898,6 +952,7 @@ document.addEventListener('click', e => {
 	else if (t.dataset.marca !== undefined) { S.filtroMarca = t.dataset.marca || null; render(); }
 	else if (t.dataset.mmodello !== undefined) { S.matriceModello = t.dataset.mmodello || null; render(); }
 	else if (t.dataset.mstato) { S.matriceStato = t.dataset.mstato; render(); }
+	else if (t.dataset.mosaic !== undefined) { S.mosaicoCodice = t.dataset.mosaic || null; render(); }
 	else if (t.id === 'matriceExport') esportaMatrice();
 	else if (t.id === 'matriceImport') document.getElementById('matriceFile').click();
 	else if (t.dataset.copia) copiaTesto(t.dataset.copia, t);

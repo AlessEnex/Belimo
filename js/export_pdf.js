@@ -12,49 +12,40 @@ function esportaRiepilogoPDF() {
   const doc = new window.jspdf.jsPDF();
   doc.setFontSize(13);
   doc.text('Riepilogo configurazioni salvate', 14, 16);
-  const headers = [['Punto impianto', 'Valvola', 'Motore', 'Perno/Kit', 'Adattatore']];
+  const headers = [['Punto impianto', 'Valvola', 'Motore', 'Perno/Kit', 'Adattatore', 'Selezione']];
   const rows = configurazioniSalvate.map(cfg => [
     cfg.puntoImpianto || '',
     (cfg.valvola || '').replace(' — ', '\n'),
     (cfg.motore || '').replace(' — ', '\n'),
     (cfg.kit || '').replace(' — ', '\n'),
-    (cfg.adattatore || '').replace(' — ', '\n')
+    (cfg.adattatore || '').replace(' — ', '\n'),
+    cfg.selezione || 'Automatica'
   ]);
+  const opzioni = {
+    head: headers,
+    body: rows,
+    startY: 22,
+    styles: { fontSize: 8, cellPadding: 2 },
+    columnStyles: {
+      0: { cellWidth: 26 },
+      1: { cellWidth: 32 },
+      2: { cellWidth: 36 },
+      3: { cellWidth: 36 },
+      4: { cellWidth: 30 },
+      5: { cellWidth: 22 }
+    }
+  };
   if (window.jspdf && window.jspdf.autoTable) {
-    window.jspdf.autoTable(doc, { 
-      head: headers, 
-      body: rows, 
-      startY: 22, 
-      styles: { fontSize: 8, cellPadding: 2 },
-      columnStyles: {
-        0: { cellWidth: 30 },
-        1: { cellWidth: 35 },
-        2: { cellWidth: 40 },
-        3: { cellWidth: 40 },
-        4: { cellWidth: 35 }
-      }
-    });
+    window.jspdf.autoTable(doc, opzioni);
   } else if (doc.autoTable) {
-    doc.autoTable({ 
-      head: headers, 
-      body: rows, 
-      startY: 22, 
-      styles: { fontSize: 8, cellPadding: 2 },
-      columnStyles: {
-        0: { cellWidth: 30 },
-        1: { cellWidth: 35 },
-        2: { cellWidth: 40 },
-        3: { cellWidth: 40 },
-        4: { cellWidth: 35 }
-      }
-    });
+    doc.autoTable(opzioni);
   } else {
     // fallback semplice
     let y = 28;
-    headers[0].forEach((h, i) => doc.text(h, 14 + i*40, y));
+    headers[0].forEach((h, i) => doc.text(h, 14 + i*30, y));
     y += 8;
     rows.forEach(r => {
-      r.forEach((v, i) => doc.text(String(v), 14 + i*40, y));
+      r.forEach((v, i) => doc.text(String(v), 14 + i*30, y));
       y += 8;
     });
   }

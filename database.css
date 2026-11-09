@@ -9,9 +9,9 @@
 }
 
 .db-main {
-  max-width: 1440px;
+  max-width: 1800px;
   margin: 0 auto;
-  padding: 16px 20px 40px;
+  padding: 22px 32px 48px;
 }
 
 .db-search {
@@ -468,6 +468,87 @@
   font-weight: 700;
   letter-spacing: 0.03em;
 }
+
+/* Mosaico combinazioni: un tile = un assieme fisico */
+.mosaic-selection {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 5px;
+  margin-top: 12px;
+  padding-top: 10px;
+  border-top: 1px solid var(--border);
+}
+
+.mosaic-selection-label {
+  margin-right: 3px;
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.mosaic-groups {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 10px;
+  padding: 12px 14px;
+}
+
+.mosaic-group {
+  min-width: 0;
+  padding: 10px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+
+.mosaic-group-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 8px;
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.mosaic-group-head span:last-child {
+  color: var(--text);
+  font-family: var(--mono);
+  font-variant-numeric: tabular-nums;
+}
+
+.mosaic-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(42px, 1fr));
+  gap: 5px;
+}
+
+.mosaic-tile {
+  min-height: 34px;
+  padding: 3px;
+  border: 1px solid color-mix(in srgb, var(--tile) 55%, var(--border));
+  border-radius: 4px;
+  background: color-mix(in srgb, var(--tile) 16%, var(--surface));
+  color: var(--tile);
+  font-family: var(--mono);
+  font-size: 10px;
+  font-weight: 600;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.mosaic-tile:hover { background: color-mix(in srgb, var(--tile) 28%, var(--surface)); }
+.mosaic-tile:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.mosaic-tile.is-uncompiled { border-style: dashed; }
+.mosaic-tile.is-selected { box-shadow: 0 0 0 2px var(--text); }
+.mosaic-gmc { --tile: #38bdf8; }
+.mosaic-ref { --tile: #a5b4fc; }
+.mosaic-other { --tile: #bef264; }
+
+.mosaic-filter-row .tag-btn { min-width: 118px; }
 
 /* Tipo di sfera: FULL PASSAGE neutro, V-PORT evidenziato (non è un colore di marca/coppia) */
 .pill.pass-full {

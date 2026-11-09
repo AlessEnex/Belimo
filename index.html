@@ -33,28 +33,34 @@
           <div id="puntoImpiantoInfoMsg" class="info-msg" style="display:none;"></div>
         </div>
         <div class="field">
-          <label>Modello valvola</label>
+          <label>Tipo valvola</label>
+          <div id="vieTags" class="tag-row"></div>
+        </div>
+        <div class="field">
+          <label>Brand valvola</label>
           <div id="modelloValvolaTags" class="tag-row"></div>
-        </div>
-        <div class="field" id="varianteBox" style="display:none;">
-          <label>Variante</label>
-          <div id="varianteTags" class="tag-row"></div>
-        </div>
-        <div class="field">
-          <label>Tipologia attuatore</label>
-          <div id="tipologiaTags" class="tag-row"></div>
-        </div>
-        <div class="field">
-          <label>Marca attuatore</label>
-          <div id="marcaTags" class="tag-row"></div>
         </div>
         <div class="field">
           <label>Misura</label>
           <div id="misuraTags" class="tag-row"></div>
         </div>
+        <div class="field" id="varianteBox" style="display:none;">
+          <label>Variante</label>
+          <div id="varianteTags" class="tag-row"></div>
+        </div>
+
+        <div class="section-sep"><span>Attuatore</span></div>
         <div class="field">
-          <label>Tipo valvola</label>
-          <div id="vieTags" class="tag-row"></div>
+          <label>Tipo motore</label>
+          <div id="tipologiaTags" class="tag-row motor-toggle" role="group" aria-label="Tipo motore"></div>
+        </div>
+        <div class="field">
+          <label>Marca attuatore</label>
+          <div id="marcaTags" class="tag-row"></div>
+        </div>
+        <div class="field" id="attuatoreBox" style="display:none;">
+          <label>Attuatore <span id="attuatoreFlag"></span></label>
+          <div id="attuatoreScelta"></div>
         </div>
         <label id="corpoInoxBox" class="check" style="display:none;">
           <input type="checkbox" id="corpoInoxCheck" /> Corpo inox (kit 25C162C tutto inox)
@@ -67,13 +73,15 @@
       <div class="panel-head">Risultato</div>
       <div class="panel-body">
         <div class="result-empty">Completa la selezione per vedere valvola, adattatore, kit e attuatore.</div>
+        <div id="valvolaPreview" class="valve-preview hidden"></div>
         <div id="risultato" class="hidden">
           <div class="res-table">
             <div id="combinazioneInfo"></div>
+            <div id="selezioneInfo"></div>
             <div id="valvolaInfo"></div>
+            <div id="motoreInfo"></div>
             <div id="adattatoreInfo"></div>
             <div id="kitInfo"></div>
-            <div id="motoreInfo"></div>
           </div>
           <div class="actions">
             <button id="saveConfigBtn" class="btn btn-primary" style="display:none;">Aggiungi alla lista</button>
@@ -85,7 +93,7 @@
 
     <section id="configListBox" class="panel saved-panel" style="display:none;">
       <div class="panel-head">
-        <span>Configurazioni salvate</span>
+        <span>Configurazioni salvate <span class="panel-hint">clic su una riga per richiamarla nel selettore</span></span>
         <div class="actions actions-inline">
           <button id="exportAllCsvBtn" class="btn btn-secondary">Esporta CSV</button>
           <button id="exportSummaryPdfBtn" class="btn btn-secondary">Riepilogo PDF</button>
