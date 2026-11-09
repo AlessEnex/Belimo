@@ -1,6 +1,7 @@
 // UI dinamica a tag per i filtri
 window.statoSelezione = {
 	modello: null,
+	passaggio: 'FULL PASSAGE',
 	variante: null,
 	tipologia: null,
 	marca: null,
@@ -30,6 +31,36 @@ function creaTag(container, values, selected, disabledSet, onClick, labelFn = v 
 	});
 }
 
+function creaTagMisure(container, values, selected, onClick) {
+	container.innerHTML = '';
+	[
+		['Millimetri', values.filter(v => /\bmm$/i.test(v))],
+		['Pollici', values.filter(v => /"$/.test(v))]
+	].forEach(([titolo, misure]) => {
+		if (!misure.length) return;
+		const gruppo = document.createElement('div');
+		gruppo.className = 'measure-group';
+		const label = document.createElement('span');
+		label.className = 'measure-group-label';
+		label.textContent = titolo;
+		const bottoni = document.createElement('div');
+		bottoni.className = 'tag-row';
+		misure.forEach(val => {
+			const btn = document.createElement('button');
+			btn.type = 'button';
+			btn.className = 'tag-btn';
+			btn.textContent = val;
+			const isSelected = selected === val;
+			btn.classList.toggle('selected', isSelected);
+			btn.setAttribute('aria-pressed', String(isSelected));
+			btn.addEventListener('click', () => onClick(val));
+			bottoni.appendChild(btn);
+		});
+		gruppo.append(label, bottoni);
+		container.appendChild(gruppo);
+	});
+}
+
 function unici(arr) {
 	return [...new Set(arr)];
 }
@@ -46,11 +77,23 @@ function sbloccaPasso(containerId) {
 }
 
 // Pill della valvola: materiale corpo e tipo di passaggio della sfera
+// Settori di una pill quadrata: [testo, classe colore]
+function segmentiValvola(v) {
+	const seg = [];
+	if (v.corpo) seg.push([`corpo ${v.corpo.toLowerCase()}`, v.corpo === 'INOX' ? 'seg-inox' : 'seg-ottone']);
+	if (v.passaggio) seg.push([v.passaggio, v.passaggio === 'V-PORT' ? 'seg-vport' : 'seg-full']);
+	return seg;
+}
+
+// Un'unica pill quadrata divisa in settori
+function pillSettori(settori) {
+	return settori.length
+		? `<span class="seg-pill">${settori.map(([testo, cls]) => `<span class="seg ${cls || ''}">${escapeHtml(testo)}</span>`).join('')}</span>`
+		: '';
+}
+
 function pillValvola(v) {
-	const pills = [];
-	if (v.corpo) pills.push(`<span class="pill ${v.corpo === 'INOX' ? 'pill-inox' : 'pill-ottone'}">corpo ${escapeHtml(v.corpo.toLowerCase())}</span>`);
-	if (v.passaggio) pills.push(`<span class="pill ${v.passaggio === 'V-PORT' ? 'pill-vport' : 'pill-full'}">${escapeHtml(v.passaggio)}</span>`);
-	return pills.join('');
+	return pillSettori(segmentiValvola(v));
 }
 
 // Anteprima nel pannello Risultato: valvole che corrispondono ai filtri scelti finora
@@ -82,11 +125,13 @@ function aggiornaAnteprimaValvola(righe) {
 					<span class="vp-desc">${escapeHtml(v.descrizione)}</span>
 				</div>
 				<div class="vp-pills">
-					<span class="pill pill-tipo">${VIE_LABEL[s.vie]}</span>
-					<span class="pill pill-tipo">${escapeHtml(datiUI?.modelli?.[r.modello] || r.modello)}</span>
-					<span class="pill pill-tipo">${escapeHtml(r.misura)}</span>
-					<span class="pill pill-tipo">${escapeHtml(VARIANTE_BREVE[r.variante] || 'Standard')}</span>
-					${pillValvola(v)}
+					${pillSettori([
+						[VIE_LABEL[s.vie]],
+						[datiUI?.modelli?.[r.modello] || r.modello],
+						[r.misura],
+						[VARIANTE_BREVE[r.variante] || 'Standard'],
+						...segmentiValvola(v)
+					])}
 				</div>
 			</div>`;
 	}).join('');
@@ -120,6 +165,7 @@ function aggiornaTagUI(dati) {
 		sbloccaPasso('modelloValvolaTags');
 		creaTag(document.getElementById('modelloValvolaTags'), modelli, s.modello, null, val => {
 			s.modello = s.modello === val ? null : val;
+			s.passaggio = 'FULL PASSAGE';
 			s.misura = null;
 			s.variante = null;
 			s.tipologia = null;
@@ -128,14 +174,32 @@ function aggiornaTagUI(dati) {
 		}, val => dati.modelli?.[val] || val);
 	}
 
-	// 3. Misura (tutte le varianti e tipologie attuatore del brand)
+	// 3. Passaggio sfera: FULL PASSAGE Ã¨ la scelta predefinita; V-PORT resta selezionabile.
 	const righeModello = righeVie.filter(r => s.modello && r.modello === s.modello);
-	const misure = unici(righeModello.map(r => r.misura)).sort((a, b) => misuraValore(a) - misuraValore(b));
+	const passaggi = ['FULL PASSAGE', 'V-PORT'].filter(p => righeModello.some(r => r.valvole[s.vie]?.passaggio === p));
+	if (!passaggi.includes(s.passaggio)) s.passaggio = passaggi.includes('FULL PASSAGE') ? 'FULL PASSAGE' : (passaggi[0] || null);
+	if (!s.modello) bloccaPasso('passaggioTags', 'Scegli prima il brand');
+	else {
+		sbloccaPasso('passaggioTags');
+		creaTag(document.getElementById('passaggioTags'), passaggi, s.passaggio, null, val => {
+			s.passaggio = val;
+			s.misura = null;
+			s.variante = null;
+			s.tipologia = null;
+			s.marca = null;
+			aggiorna();
+		}, val => val === 'V-PORT' ? 'V-port' : 'Full passage');
+	}
+	const righePassaggio = righeModello.filter(r => s.passaggio && r.valvole[s.vie]?.passaggio === s.passaggio);
+
+	// 4. Misura (tutte le varianti e tipologie attuatore del passaggio scelto)
+	const misure = unici(righePassaggio.map(r => r.misura)).sort((a, b) => misuraValore(a) - misuraValore(b));
 	if (s.misura && !misure.includes(s.misura)) s.misura = null;
 	if (!s.modello) bloccaPasso('misuraTags', 'Scegli prima il brand');
+	else if (!s.passaggio) bloccaPasso('misuraTags', 'Scegli prima il passaggio sfera');
 	else {
 		sbloccaPasso('misuraTags');
-		creaTag(document.getElementById('misuraTags'), misure, s.misura, null, val => {
+		creaTagMisure(document.getElementById('misuraTags'), misure, s.misura, val => {
 			s.misura = s.misura === val ? null : val;
 			aggiorna();
 		});
@@ -144,7 +208,7 @@ function aggiornaTagUI(dati) {
 	// 4. Variante (Standard / Schrader / Ibrida): visibile solo se il brand ne ha più di una;
 	// quelle che non esistono nella misura scelta sono disattivate, se ne resta una è scelta da sola
 	const variantiBrand = VARIANTI.filter(v => righeModello.some(r => r.variante === v));
-	const righeMisuraTutte = righeModello.filter(r => s.misura && r.misura === s.misura);
+	const righeMisuraTutte = righePassaggio.filter(r => s.misura && r.misura === s.misura);
 	const varianti = variantiBrand.filter(v => variantiBrand.length === 1 || righeMisuraTutte.some(r => r.variante === v));
 	if (s.variante && !varianti.includes(s.variante)) s.variante = null;
 	// Predefinita: Standard quando la misura la supporta; operatore libero di scegliere Schrader o Ibrida.
@@ -212,6 +276,7 @@ function aggiornaTagUI(dati) {
 	// Anteprima: righe filtrate con le scelte fatte finora
 	let filtrate = righeVie;
 	if (s.modello) filtrate = filtrate.filter(r => r.modello === s.modello);
+	if (s.passaggio) filtrate = filtrate.filter(r => r.valvole[s.vie]?.passaggio === s.passaggio);
 	if (s.misura) filtrate = filtrate.filter(r => r.misura === s.misura);
 	if (s.variante) filtrate = filtrate.filter(r => r.variante === s.variante);
 	if (s.tipologia && !fuoriRegola) filtrate = filtrate.filter(r => r.tipologia === s.tipologia);
@@ -243,7 +308,7 @@ window.initTagUI = function(dati) {
 // Imposta la selezione da codice (selettore pulito o riga salvata richiamata)
 window.impostaSelezione = function(valori = {}) {
 	Object.assign(statoSelezione, {
-		modello: null, variante: null, tipologia: null, marca: null, misura: null, vie: null, corpoInox: false
+		modello: null, passaggio: 'FULL PASSAGE', variante: null, tipologia: null, marca: null, misura: null, vie: null, corpoInox: false
 	}, valori);
 	aggiornaTagUI(datiUI);
 	if (window.onSelezioneCambiata) window.onSelezioneCambiata();

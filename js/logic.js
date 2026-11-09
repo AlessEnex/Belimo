@@ -180,6 +180,7 @@ function getSelezioneCorrente() {
 	return {
 		puntoImpianto: document.getElementById('puntoImpiantoSelect')?.value || '',
 		modello: s.modello,
+		passaggio: s.passaggio,
 		variante: s.variante,
 		tipologia: s.tipologia,
 		marca: s.marca,
@@ -199,7 +200,8 @@ function mostraRisultatoAutomatico() {
 		window.risultatoCorrente = null;
 		return;
 	}
-	const stessaValvola = r => r.modello === s.modello && r.variante === s.variante && r.misura === s.misura && r.valvole[s.vie];
+	const stessaValvola = r => r.modello === s.modello && r.variante === s.variante && r.misura === s.misura
+		&& r.valvole[s.vie]?.passaggio === s.passaggio;
 	let riga = dati.accoppiamenti.find(r => stessaValvola(r) && r.tipologia === s.tipologia);
 	// Nessuna regola per questa tipologia (es. modulante su full passage): valvola dell'altra regola,
 	// nessuna scelta automatica
@@ -651,8 +653,8 @@ function richiamaConfigurazione(cfg) {
 	if (sceltaManuale && !cfg.daVerificare) { delete sceltaManuale.kit; delete sceltaManuale.adattatore; }
 	const punto = document.getElementById('puntoImpiantoSelect');
 	if (punto) { punto.value = ''; punto.dispatchEvent(new Event('change')); }
-	const { modello, variante, tipologia, marca, misura, vie, corpoInox } = cfg;
-	window.impostaSelezione({ modello, variante, tipologia, marca, misura, vie, corpoInox });
+	const { modello, passaggio, variante, tipologia, marca, misura, vie, corpoInox } = cfg;
+	window.impostaSelezione({ modello, passaggio, variante, tipologia, marca, misura, vie, corpoInox });
 	document.querySelector('.layout')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
