@@ -6,19 +6,10 @@ window.motoreSelezionato = null;
 // Risultato mostrato a video (usato da salvataggio ed export)
 window.risultatoCorrente = null;
 
-// Dati caricati da data/accoppiamenti.json (tabella accoppiamenti valvole-motori)
+// Dati letti via SQL da data/belimo.sql (tabella accoppiamenti valvole-motori)
 let dati = { modelli: {}, kit: [], adattatori: [], attuatori: [], accoppiamenti: [] };
 
 const VIE_TESTO = { '2': '2-VIE', '3': '3-VIE' };
-
-function escapeHtml(value) {
-	return String(value ?? '')
-		.replace(/&/g, '&amp;')
-		.replace(/</g, '&lt;')
-		.replace(/>/g, '&gt;')
-		.replace(/"/g, '&quot;')
-		.replace(/'/g, '&#039;');
-}
 
 function renderRecapPills(items, type, emptyLabel = 'N/A') {
 	if (!items || items.length === 0) {
@@ -53,23 +44,48 @@ function testoArticolo(item) {
 	return item ? `${item.codice} — ${item.descrizione || ''}` : '';
 }
 
-// Opzioni kit+attuatore valide per la riga e le vie scelte (con sostituzione kit navale)
-function opzioniPerVie(riga, vie, navale) {
+// Opzioni adattatore+kit+attuatore valide per la riga, le vie e la marca attuatore scelte
+// (con sostituzione kit navale)
+function opzioniPerVie(riga, vie, navale, marca) {
 	return riga.opzioni
-		.filter(o => !o.vie || o.vie === vie)
+		.filter(o => (!o.vie || o.vie === vie) && (!marca || o.marca === marca))
 		.map(o => ({
+			adattatore: trovaAdattatore(o.adattatore),
 			kit: trovaKit(navale && o.navale ? dati.kitNavale : o.kit),
 			attuatore: trovaAttuatore(o.attuatore)
 		}));
 }
 
+// Base dati: apriDatabase() e query() sono in js/db.js
 async function caricaDati() {
-	const [accoppiamentiRes, puntiImpiantoRes] = await Promise.all([
-		fetch('data/accoppiamenti.json'),
-		fetch('data/punti_impianto.json')
-	]);
-	dati = await accoppiamentiRes.json();
-	window.puntiImpianto = (await puntiImpiantoRes.json()).punti || [];
+	await apriDatabase();
+
+	const impostazioni = Object.fromEntries(query('SELECT chiave, valore FROM impostazioni').map(r => [r.chiave, r.valore]));
+	const valvola = codice => codice ? query('SELECT codice, descrizione FROM valvole WHERE codice = ?', [codice])[0] || { codice, descrizione: '' } : null;
+
+	dati = {
+		fonte: impostazioni.fonte,
+		kitNavale: impostazioni.kit_navale,
+		modelli: Object.fromEntries(query('SELECT codice, etichetta FROM modelli ORDER BY ordine').map(m => [m.codice, m.etichetta])),
+		kit: query('SELECT codice, descrizione FROM kit ORDER BY rowid'),
+		adattatori: query('SELECT codice, descrizione FROM adattatori ORDER BY rowid'),
+		attuatori: query('SELECT codice, descrizione, brand, tipo, nm AS Nm, alimentazione FROM attuatori ORDER BY rowid'),
+		accoppiamenti: ordinaPerMisura(query(`
+			SELECT a.id, a.modello, a.tipologia, a.misura, a.valvola_2vie, a.valvola_3vie
+			FROM accoppiamenti a JOIN modelli m ON m.codice = a.modello
+			ORDER BY m.ordine, a.id`)).map(r => ({
+				modello: r.modello,
+				tipologia: r.tipologia,
+				misura: r.misura,
+				valvole: { '2': valvola(r.valvola_2vie), '3': valvola(r.valvola_3vie) },
+				opzioni: query(`
+					SELECT o.adattatore, o.kit, o.attuatore, o.vie, o.navale, t.brand AS marca
+					FROM opzioni o JOIN attuatori t ON t.codice = o.attuatore
+					WHERE o.accoppiamento_id = ? ORDER BY o.ordine`, [r.id])
+					.map(o => ({ ...o, navale: !!o.navale }))
+			}))
+	};
+	window.puntiImpianto = query('SELECT nome, info FROM punti_impianto ORDER BY ordine');
 }
 
 function getSelezioneCorrente() {
@@ -78,6 +94,7 @@ function getSelezioneCorrente() {
 		puntoImpianto: document.getElementById('puntoImpiantoSelect')?.value || '',
 		modello: s.modello,
 		tipologia: s.tipologia,
+		marca: s.marca,
 		misura: s.misura,
 		vie: s.vie,
 		navale: !!s.navale
@@ -87,7 +104,7 @@ function getSelezioneCorrente() {
 function mostraRisultatoAutomatico() {
 	const s = getSelezioneCorrente();
 	// Serve tutto selezionato
-	if (!s.modello || !s.tipologia || !s.misura || !s.vie) {
+	if (!s.modello || !s.tipologia || !s.marca || !s.misura || !s.vie) {
 		document.getElementById('risultato').classList.add('hidden');
 		nascondiErrore();
 		window.risultatoCorrente = null;
@@ -99,15 +116,15 @@ function mostraRisultatoAutomatico() {
 		mostraErrore('Nessuna valvola disponibile per la combinazione selezionata.');
 		return;
 	}
-	const opzioni = opzioniPerVie(riga, s.vie, s.navale);
+	const opzioni = opzioniPerVie(riga, s.vie, s.navale, s.marca);
 	if (opzioni.length === 0) {
-		mostraErrore('Nessun kit/attuatore configurato per questa combinazione.');
+		mostraErrore(`Nessun attuatore ${s.marca} configurato per questa combinazione.`);
 		return;
 	}
-	renderRisultato({ valvola, adattatoreObj: trovaAdattatore(riga.adattatore), opzioni });
+	renderRisultato({ valvola, opzioni });
 }
 
-function renderRisultato({ valvola, adattatoreObj, opzioni }) {
+function renderRisultato({ valvola, opzioni }) {
 	const risultato = document.getElementById('risultato');
 	const valvolaInfo = document.getElementById('valvolaInfo');
 	const kitInfo = document.getElementById('kitInfo');
@@ -124,39 +141,54 @@ function renderRisultato({ valvola, adattatoreObj, opzioni }) {
 		</div>`;
 
 	valvolaInfo.innerHTML = resRow('Valvola', valvola);
-	adattatoreInfo.innerHTML = resRow('Adattatore', adattatoreObj, 'Non richiesto');
 
+	// L'adattatore dipende dall'opzione scelta (es. Watergate non lo richiede)
 	const mostraMotore = opzione => {
 		const a = opzione.attuatore;
+		adattatoreInfo.innerHTML = resRow('Adattatore', opzione.adattatore, 'Non richiesto');
 		motoreInfo.innerHTML = resRow('Attuatore', a);
+		// Codice combinazione della matrice CAD/PDM
+		const comb = query(`SELECT codice, codice_pdm FROM combinazioni
+			WHERE valvola = ? AND COALESCE(adattatore, '') = ? AND kit = ? AND attuatore = ?`,
+			[valvola.codice, opzione.adattatore?.codice || '', opzione.kit.codice, a.codice])[0] || null;
+		document.getElementById('combinazioneInfo').innerHTML = comb
+			? resRow('Combinazione', { codice: comb.codice, descrizione: comb.codice_pdm ? `PDM ${comb.codice_pdm}` : 'codice PDM da compilare' })
+			: resRow('Combinazione', null, 'Nessun codice in matrice');
 		window.kitSelezionato = opzione.kit;
 		window.motoreSelezionato = a;
-		window.risultatoCorrente = { valvola, adattatore: adattatoreObj, kit: opzione.kit, motore: a };
+		window.risultatoCorrente = { valvola, adattatore: opzione.adattatore, kit: opzione.kit, motore: a, combinazione: comb };
+	};
+
+	const mostraKit = opzione => {
+		kitInfo.querySelector('.kit-scelto').innerHTML = resRow('Kit', opzione.kit);
 	};
 
 	if (opzioni.length > 1) {
-		// Più kit disponibili: ogni kit ha il suo attuatore
+		// Più opzioni per la stessa marca: si sceglie l'attuatore, kit e adattatore seguono
 		const righe = opzioni.map((o, idx) => `
 			<label class="kit-option">
 				<input type="radio" name="kitChoice" value="${idx}" ${idx === 0 ? 'checked' : ''}>
-				<span class="code">${escapeHtml(o.kit.codice)}</span>
-				<span class="res-desc">${escapeHtml(o.kit.descrizione)}</span>
-				<span class="res-muted">→ ${escapeHtml(o.attuatore.codice)}</span>
+				<span class="code">${escapeHtml(o.attuatore.codice)}</span>
+				<span class="res-desc">${escapeHtml(o.attuatore.descrizione)}</span>
+				<span class="res-muted">kit ${escapeHtml(o.kit.codice)}</span>
 			</label>
 		`).join('');
 		kitInfo.innerHTML = `
 			<div class="res-row res-row-top">
-				<span class="res-label">Kit</span>
+				<span class="res-label">Opzione</span>
 				<div class="kit-options">${righe}</div>
-			</div>`;
+			</div>
+			<div class="kit-scelto"></div>`;
 		kitInfo.querySelectorAll('input[name="kitChoice"]').forEach(radio => {
 			radio.addEventListener('change', function() {
+				mostraKit(opzioni[Number(this.value)]);
 				mostraMotore(opzioni[Number(this.value)]);
 			});
 		});
 	} else {
-		kitInfo.innerHTML = resRow('Kit', opzioni[0].kit);
+		kitInfo.innerHTML = '<div class="kit-scelto"></div>';
 	}
+	mostraKit(opzioni[0]);
 	mostraMotore(opzioni[0]);
 
 	risultato.classList.remove('hidden');
@@ -200,12 +232,13 @@ document.addEventListener('DOMContentLoaded', async () => {
 	const infoIcon = document.getElementById('puntoImpiantoInfoIcon');
 	const infoMsg = document.getElementById('puntoImpiantoInfoMsg');
 	if (select && window.puntiImpianto) {
-		select.innerHTML = '<option value="">Seleziona punto di impianto...</option>' + window.puntiImpianto.map(p => `<option value="${p}">${p}</option>`).join('');
+		select.innerHTML = '<option value="">Seleziona punto di impianto...</option>' + window.puntiImpianto.map(p => `<option value="${escapeHtml(p.nome)}">${escapeHtml(p.nome)}</option>`).join('');
 		select.addEventListener('change', function() {
-			if (select.value === 'Collettore AUX-PDC') {
+			const info = window.puntiImpianto.find(p => p.nome === select.value)?.info;
+			if (info) {
 				infoIcon.style.display = '';
 				infoMsg.style.display = '';
-				infoMsg.textContent = 'Questa configurazione si riferisce a quando ci sono circuiti con pompa di calore o aria condizionata che richiedono un motore sul collettore di aspirazione che divide due bancate di compressori';
+				infoMsg.textContent = info;
 			} else {
 				infoIcon.style.display = 'none';
 				infoMsg.style.display = 'none';
@@ -246,6 +279,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 			if (!r) return;
 			window.configurazioniSalvate.push({
 				...getSelezioneCorrente(),
+				combinazione: r.combinazione?.codice || '',
 				valvola: testoArticolo(r.valvola),
 				kit: testoArticolo(r.kit),
 				adattatore: r.adattatore ? testoArticolo(r.adattatore) : '',
@@ -329,7 +363,8 @@ function mostraRecapConfigurazione() {
 			gruppoCorrente = gruppo;
 			html += `<tr class="recap-brand-row"><td colspan="6">${escapeHtml(gruppo)}</td></tr>`;
 		}
-		const adattatore = trovaAdattatore(r.adattatore);
+		// Una voce per opzione, nello stesso ordine in adattatore / kit / attuatore
+		const adattatoriItems = r.opzioni.map(o => trovaAdattatore(o.adattatore) || { codice: '—', descrizione: 'non richiesto' });
 		const kitItems = r.opzioni.map(o => {
 			const k = trovaKit(o.kit);
 			const note = [o.vie ? `solo ${VIE_TESTO[o.vie]}` : '', o.navale ? `navale: ${dati.kitNavale}` : ''].filter(Boolean).join(' · ');
@@ -354,7 +389,7 @@ function mostraRecapConfigurazione() {
 				<td class="recap-valve-cell"><div class="recap-valve-title">${escapeHtml(r.misura)}</div></td>
 				<td><div class="recap-pill-stack">${renderRecapPills(r.valvole['2'] ? [r.valvole['2']] : [], 'geometry', 'NA')}</div></td>
 				<td><div class="recap-pill-stack">${renderRecapPills(r.valvole['3'] ? [r.valvole['3']] : [], 'vport', 'NA')}</div></td>
-				<td><div class="recap-pill-stack">${renderRecapPills(adattatore ? [adattatore] : [], 'adapter', 'Non richiesto')}</div></td>
+				<td><div class="recap-pill-stack">${renderRecapPills(adattatoriItems, 'adapter', 'Non richiesto')}</div></td>
 				<td><div class="recap-pill-stack">${renderRecapPills(kitItems, 'kit')}</div></td>
 				<td><div class="recap-pill-stack">${attuatoriHtml}</div></td>
 			</tr>
@@ -381,7 +416,7 @@ function aggiornaTabellaConfigurazioni() {
 	}
 	box.style.display = '';
 	// Header
-	table.innerHTML = `<thead><tr><th>#</th><th>Punto impianto</th><th>Valvola</th><th>Adattatore</th><th>Kit</th><th>Attuatore</th></tr></thead>`;
+	table.innerHTML = `<thead><tr><th>#</th><th>Combinazione</th><th>Punto impianto</th><th>Valvola</th><th>Adattatore</th><th>Kit</th><th>Attuatore</th></tr></thead>`;
 	// Righe
 	const cella = testo => {
 		const [codice, ...resto] = String(testo || '').split(' — ');
@@ -389,6 +424,7 @@ function aggiornaTabellaConfigurazioni() {
 	};
 	table.innerHTML += '<tbody>' + window.configurazioniSalvate.map((cfg, i) => `<tr>
 		<td class="num">${i + 1}</td>
+		<td>${cfg.combinazione ? `<span class="code">${escapeHtml(cfg.combinazione)}</span>` : '<span class="res-muted">—</span>'}</td>
 		<td>${escapeHtml(cfg.puntoImpianto) || '<span class="res-muted">—</span>'}</td>
 		<td>${cella(cfg.valvola)}</td>
 		<td>${cella(cfg.adattatore)}</td>

@@ -15,6 +15,7 @@
     </div>
     <div class="topbar-actions">
       <button id="toggleRecapBtn" class="btn btn-secondary">Tabella regole</button>
+      <a href="database.html" class="btn btn-secondary">Database</a>
       <a href="https://alessenex.github.io/Dashboard_tools/" target="_blank" class="btn btn-secondary">Dashboard Tools</a>
     </div>
   </header>
@@ -40,6 +41,10 @@
           <div id="tipologiaTags" class="tag-row"></div>
         </div>
         <div class="field">
+          <label>Marca attuatore</label>
+          <div id="marcaTags" class="tag-row"></div>
+        </div>
+        <div class="field">
           <label>Misura</label>
           <div id="misuraTags" class="tag-row"></div>
         </div>
@@ -60,6 +65,7 @@
         <div class="result-empty">Completa la selezione per vedere valvola, adattatore, kit e attuatore.</div>
         <div id="risultato" class="hidden">
           <div class="res-table">
+            <div id="combinazioneInfo"></div>
             <div id="valvolaInfo"></div>
             <div id="adattatoreInfo"></div>
             <div id="kitInfo"></div>
@@ -120,6 +126,8 @@
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.0/jspdf.plugin.autotable.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.10.3/sql-wasm.js"></script>
+  <script src="js/db.js"></script>
   <script src="js/ui.js"></script>
   <script src="js/logic.js"></script>
   <script src="js/export.js"></script>

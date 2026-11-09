@@ -1,0 +1,456 @@
+/* Pagina database: si appoggia ai token e componenti di style.css */
+:root {
+  --ok: #4ade80;
+  --ok-weak: rgba(74, 222, 128, 0.12);
+  --warn: #fbbf24;
+  --warn-weak: rgba(251, 191, 36, 0.12);
+  --err: #f87171;
+  --err-weak: rgba(248, 113, 113, 0.12);
+}
+
+.db-main {
+  max-width: 1440px;
+  margin: 0 auto;
+  padding: 16px 20px 40px;
+}
+
+.db-search {
+  width: 280px;
+  height: 28px;
+  padding: 0 10px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius);
+  background: var(--surface-2);
+  color: var(--text);
+  font: inherit;
+  font-size: 12px;
+}
+
+.db-search:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+/* ---------- Riepilogo ---------- */
+.db-summary {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.db-stat {
+  padding: 10px 12px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+
+.db-stat-value {
+  font-size: 20px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.db-stat-label {
+  color: var(--muted);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.db-stat.is-err .db-stat-value { color: var(--err); }
+.db-stat.is-warn .db-stat-value { color: var(--warn); }
+.db-stat.is-ok .db-stat-value { color: var(--ok); }
+
+.db-tabs {
+  margin-bottom: 12px;
+}
+
+.db-tabs .tag-btn .db-count {
+  margin-left: 6px;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.db-tabs .tag-btn.selected .db-count {
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.db-section + .db-section {
+  margin-top: 14px;
+}
+
+.db-hint {
+  margin: 0 0 10px;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+/* ---------- Pills ---------- */
+.pill {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 5px;
+  max-width: 100%;
+  padding: 2px 7px;
+  border: 1px solid var(--border-strong);
+  border-radius: 999px;
+  background: var(--surface-2);
+  font-size: 11.5px;
+  line-height: 1.35;
+  white-space: nowrap;
+  overflow: hidden;
+  min-width: 0;
+}
+
+.pill-code {
+  font-family: var(--mono);
+  font-size: 11px;
+}
+
+.pill-meta {
+  color: var(--muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.pill-wrap {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.pill-stack {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  min-width: 0;
+  max-width: 100%;
+}
+
+.pill-stack + .pill-stack {
+  margin-top: 4px;
+  padding-top: 6px;
+  border-top: 1px dashed var(--border);
+}
+
+.pill-ok { border-color: rgba(74, 222, 128, 0.45); background: var(--ok-weak); color: var(--ok); }
+.pill-warn { border-color: rgba(251, 191, 36, 0.45); background: var(--warn-weak); color: var(--warn); }
+.pill-err { border-color: rgba(248, 113, 113, 0.5); background: var(--err-weak); color: var(--err); }
+.pill-muted { color: var(--muted); }
+.pill-gap { border-style: dashed; background: transparent; color: var(--warn); }
+.pill-na { border-style: dashed; background: transparent; color: #5d616b; }
+.pill-strike .pill-code { text-decoration: line-through; }
+
+.pill-tag {
+  padding: 0 6px;
+  border-radius: 4px;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+}
+
+/* ---------- Controlli ---------- */
+.db-check-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.db-check {
+  border-bottom: 1px solid var(--border);
+}
+
+.db-check:last-child {
+  border-bottom: none;
+}
+
+.db-check > summary {
+  display: grid;
+  grid-template-columns: 96px 1fr auto;
+  align-items: center;
+  gap: 12px;
+  padding: 9px 14px;
+  cursor: pointer;
+  list-style: none;
+}
+
+.db-check > summary::-webkit-details-marker {
+  display: none;
+}
+
+.db-check > summary:hover {
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.db-check-title {
+  font-weight: 500;
+}
+
+.db-check-desc {
+  display: block;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.db-check-n {
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.db-check-body {
+  padding: 4px 14px 12px 122px;
+}
+
+.db-check-item {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 6px;
+  padding: 3px 0;
+}
+
+/* ---------- Copertura ---------- */
+.cov-table td,
+.cov-table th {
+  text-align: center;
+}
+
+.cov-table td:first-child,
+.cov-table th:first-child {
+  text-align: left;
+  font-family: var(--mono);
+  white-space: nowrap;
+}
+
+.cov-table td {
+  vertical-align: middle;
+}
+
+.cov-cell {
+  display: inline-flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 14px;
+  margin-bottom: 10px;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.legend span {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.acc-table {
+  table-layout: fixed;
+  min-width: 900px;
+}
+
+.acc-table th:nth-child(1) { width: 80px; }
+.acc-table th:nth-child(2),
+.acc-table th:nth-child(3) { width: 24%; }
+
+/* Opzioni di motorizzazione: una riga per opzione */
+.opz-list {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.opz-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+}
+
+.opz-row + .opz-row {
+  padding-top: 5px;
+  border-top: 1px dashed var(--border);
+}
+
+/* Matrice CAD/PDM */
+.mat-table td {
+  vertical-align: middle;
+}
+
+.pill.pill-cmb {
+  border-color: var(--accent);
+  background: var(--accent-weak);
+  color: #bcd4ff;
+  font-family: var(--mono);
+  font-size: 11.5px;
+  letter-spacing: 0;
+}
+
+.sql-out {
+  margin-top: 12px;
+}
+
+.sql-out .sql-box {
+  min-height: 90px;
+  margin-bottom: 6px;
+}
+
+/* ---------- Filtri tabelle ---------- */
+.filter-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--border);
+}
+
+.group-row td {
+  background: var(--bg);
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.desc-cell {
+  min-width: 220px;
+}
+
+.row-dim td {
+  opacity: 0.55;
+}
+
+/* ---------- Console SQL ---------- */
+.sql-box {
+  width: 100%;
+  min-height: 110px;
+  padding: 10px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius);
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--mono);
+  font-size: 12px;
+  resize: vertical;
+}
+
+.sql-presets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-bottom: 8px;
+}
+
+.sql-result {
+  margin-top: 12px;
+  overflow-x: auto;
+}
+
+.sql-error {
+  color: var(--err);
+  font-family: var(--mono);
+  font-size: 12px;
+}
+
+.hidden-by-search {
+  display: none;
+}
+
+@media (max-width: 700px) {
+  .db-main { padding: 12px 16px 32px; }
+  .topbar { height: auto; flex-wrap: wrap; padding: 8px 16px; }
+  .db-search { width: 100%; }
+  .topbar-actions { width: 100%; }
+  .db-check > summary { grid-template-columns: 1fr auto; }
+  .db-check > summary .pill { grid-column: 1 / -1; justify-self: start; }
+  .db-check-body { padding-left: 14px; }
+}
+
+/* ---------- Colori pills (catalogo) ---------- */
+/* Ogni tinta definisce --c; .c applica bordo, sfondo e testo tinti */
+.c-green  { --c: #4ade80; }  /* 20 Nm */
+.c-blue   { --c: #60a5fa; }  /* 40 Nm */
+.c-orange { --c: #fb923c; }  /* 90 Nm */
+.c-pink   { --c: #f472b6; }  /* 160 Nm */
+.c-teal   { --c: #2dd4bf; }  /* Watergate */
+.c-sky    { --c: #38bdf8; }  /* GMC */
+.c-indigo { --c: #a5b4fc; }  /* Refrigera */
+.c-lime   { --c: #bef264; }  /* OLAB */
+.c-purple { --c: #c084fc; }  /* ibrida INOX/K65 */
+.c-silver { --c: #cbd5e1; }  /* corpo INOX */
+.c-gold   { --c: #facc15; }  /* corpo OTTONE */
+.c-slate  { --c: #94a3b8; }
+
+.pill.c {
+  border-color: color-mix(in srgb, var(--c) 55%, transparent);
+  background: color-mix(in srgb, var(--c) 13%, transparent);
+  color: var(--c);
+}
+
+.pill.c .pill-code {
+  color: var(--c);
+  font-weight: 600;
+}
+
+.pill.c .pill-meta {
+  color: color-mix(in srgb, var(--c) 35%, var(--muted));
+}
+
+/* Tipo attuatore: MOD pieno, ON-OFF neutro */
+.pill.t-mod {
+  border-color: var(--accent);
+  background: var(--accent);
+  color: #fff;
+}
+
+.pill.t-onoff {
+  color: #9aa3b2;
+}
+
+.pill-wrap {
+  align-items: center;
+}
+
+.tag-btn.selected .res-muted {
+  color: rgba(255, 255, 255, 0.8);
+}
+
+/* Barra colorata sulle righe di gruppo */
+.group-row td.grp {
+  box-shadow: inset 3px 0 0 var(--c);
+  color: var(--c);
+}
+
+/* Legenda colori */
+.legend-colori {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 22px;
+  margin-bottom: 12px;
+  padding: 10px 14px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+
+.legend-group {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 5px;
+}
+
+.legend-title {
+  margin-right: 3px;
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}

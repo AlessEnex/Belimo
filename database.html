@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Database Valvole Attuatori</title>
+  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="database.css" />
+</head>
+<body>
+
+  <header class="topbar">
+    <div class="topbar-title">
+      <span class="topbar-name">Database</span>
+      <span class="topbar-sub" id="dbFonte">Caricamento data/belimo.sql…</span>
+    </div>
+    <div class="topbar-actions">
+      <input id="cerca" class="db-search" type="search" placeholder="Cerca codice, descrizione, misura…" />
+      <a href="index.html" class="btn btn-secondary">Selettore</a>
+    </div>
+  </header>
+
+  <main class="db-main">
+    <div id="riepilogo" class="db-summary"></div>
+    <nav id="tabs" class="tag-row db-tabs"></nav>
+    <div id="vista"></div>
+  </main>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.10.3/sql-wasm.js"></script>
+  <script src="js/db.js"></script>
+  <script src="js/database.js"></script>
+</body>
+</html>

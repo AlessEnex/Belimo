@@ -2,6 +2,7 @@
 window.statoSelezione = {
 	modello: null,
 	tipologia: null,
+	marca: null,
 	misura: null,
 	vie: null,
 	navale: false
@@ -42,6 +43,7 @@ function aggiornaTagUI(dati) {
 	creaTag(document.getElementById('modelloValvolaTags'), modelli, s.modello, null, val => {
 		s.modello = s.modello === val ? null : val;
 		s.tipologia = null;
+		s.marca = null;
 		s.misura = null;
 		s.vie = null;
 		aggiorna();
@@ -57,17 +59,32 @@ function aggiornaTagUI(dati) {
 		aggiorna();
 	});
 
-	// Misura
+	// Marca attuatore (Belimo, Watergate...): se ce n'è una sola viene scelta da sola
 	const righeTipologia = righeModello.filter(r => !s.tipologia || r.tipologia === s.tipologia);
-	const misure = unici(righeTipologia.map(r => r.misura));
+	const marcaOk = o => !s.marca || o.marca === s.marca;
+	const marche = unici(righeTipologia.flatMap(r => r.opzioni.map(o => o.marca)));
+	if (s.marca && !marche.includes(s.marca)) s.marca = null;
+	if (!s.marca && marche.length === 1) s.marca = marche[0];
+	creaTag(document.getElementById('marcaTags'), marche, s.marca, null, val => {
+		s.marca = s.marca === val ? null : val;
+		s.misura = null;
+		s.vie = null;
+		aggiorna();
+	}, val => val.charAt(0) + val.slice(1).toLowerCase());
+
+	// Misura: solo quelle con almeno un attuatore della marca scelta
+	const righeMarca = righeTipologia.filter(r => r.opzioni.some(marcaOk));
+	const misure = unici(righeMarca.map(r => r.misura));
+	if (s.misura && !misure.includes(s.misura)) s.misura = null;
 	creaTag(document.getElementById('misuraTags'), misure, s.misura, null, val => {
 		s.misura = s.misura === val ? null : val;
 		aggiorna();
 	});
 
-	// Vie: disabilita quelle non disponibili (NA in tabella)
-	const righeMisura = righeTipologia.filter(r => !s.misura || r.misura === s.misura);
-	const vieDisponibili = new Set(['2', '3'].filter(v => righeMisura.some(r => r.valvole[v])));
+	// Vie: disponibili se c'è la valvola e un'opzione della marca valida per quelle vie
+	const righeMisura = righeMarca.filter(r => !s.misura || r.misura === s.misura);
+	const vieDisponibili = new Set(['2', '3'].filter(v => righeMisura.some(r =>
+		r.valvole[v] && r.opzioni.some(o => marcaOk(o) && (!o.vie || o.vie === v)))));
 	const vieDis = new Set(['2', '3'].filter(v => !vieDisponibili.has(v)));
 	if (s.vie && vieDis.has(s.vie)) s.vie = null;
 	creaTag(document.getElementById('vieTags'), ['2', '3'], s.vie, vieDis, val => {
@@ -79,7 +96,7 @@ function aggiornaTagUI(dati) {
 	const navaleBox = document.getElementById('navaleBox');
 	const navaleCheck = document.getElementById('navaleCheck');
 	const rigaUnica = s.modello && s.tipologia && s.misura ? righeMisura[0] : null;
-	const prevedeNavale = !!rigaUnica?.opzioni.some(o => o.navale);
+	const prevedeNavale = !!rigaUnica?.opzioni.some(o => o.navale && marcaOk(o));
 	if (navaleBox) navaleBox.style.display = prevedeNavale ? '' : 'none';
 	if (!prevedeNavale) s.navale = false;
 	if (navaleCheck) {
