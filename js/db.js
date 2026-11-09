@@ -45,13 +45,22 @@ function misuraValore(m) {
 }
 
 // Righe di accoppiamento già in ordine di modello: mantiene i gruppi
-// (modello + tipologia) nell'ordine di comparsa e ordina le misure in modo crescente
+// (modello + variante + tipologia) nell'ordine di comparsa e ordina le misure in modo crescente
 function ordinaPerMisura(righe) {
+	const chiave = r => [r.modello, r.variante, r.tipologia].join('|');
 	const gruppo = {};
-	righe.forEach((r, i) => { gruppo[r.modello + '|' + r.tipologia] ??= i; });
+	righe.forEach((r, i) => { gruppo[chiave(r)] ??= i; });
 	return [...righe].sort((a, b) =>
-		gruppo[a.modello + '|' + a.tipologia] - gruppo[b.modello + '|' + b.tipologia]
-		|| misuraValore(a.misura) - misuraValore(b.misura));
+		gruppo[chiave(a)] - gruppo[chiave(b)] || misuraValore(a.misura) - misuraValore(b.misura));
+}
+
+// Variante della valvola dentro il modello
+const VARIANTI = ['STANDARD', 'SCHRADER', 'IBRIDA'];
+const VARIANTE_LABEL = { STANDARD: 'Standard', SCHRADER: 'Schrader', IBRIDA: 'Ibrida (connessioni inox e K65)' };
+const VARIANTE_BREVE = { STANDARD: '', SCHRADER: 'Schrader', IBRIDA: 'Ibrida' };
+// "GMC", "GMC Schrader", "GMC Ibrida": etichetta breve di modello + variante
+function nomeSerie(etichettaModello, variante) {
+	return [etichettaModello, VARIANTE_BREVE[variante] || ''].filter(Boolean).join(' ');
 }
 
 function escapeHtml(value) {

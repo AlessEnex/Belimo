@@ -1,11 +1,12 @@
 // UI dinamica a tag per i filtri
 window.statoSelezione = {
 	modello: null,
+	variante: null,
 	tipologia: null,
 	marca: null,
 	misura: null,
 	vie: null,
-	navale: false
+	corpoInox: false
 };
 
 const VIE_LABEL = { '2': '2-VIE', '3': '3-VIE' };
@@ -42,6 +43,7 @@ function aggiornaTagUI(dati) {
 	const modelli = unici(righe.map(r => r.modello));
 	creaTag(document.getElementById('modelloValvolaTags'), modelli, s.modello, null, val => {
 		s.modello = s.modello === val ? null : val;
+		s.variante = null;
 		s.tipologia = null;
 		s.marca = null;
 		s.misura = null;
@@ -49,8 +51,23 @@ function aggiornaTagUI(dati) {
 		aggiorna();
 	}, val => dati.modelli?.[val] || val);
 
+	// Variante (Standard / Schrader / Ibrida): visibile solo se il modello ne ha più di una
+	const righeMarcaValvola = righe.filter(r => !s.modello || r.modello === s.modello);
+	const varianti = VARIANTI.filter(v => righeMarcaValvola.some(r => r.variante === v));
+	if (s.variante && !varianti.includes(s.variante)) s.variante = null;
+	if (!s.variante && varianti.length === 1) s.variante = varianti[0];
+	const varianteBox = document.getElementById('varianteBox');
+	if (varianteBox) varianteBox.style.display = s.modello && varianti.length > 1 ? '' : 'none';
+	creaTag(document.getElementById('varianteTags'), varianti, s.variante, null, val => {
+		s.variante = s.variante === val ? null : val;
+		s.tipologia = null;
+		s.misura = null;
+		s.vie = null;
+		aggiorna();
+	}, val => VARIANTE_LABEL[val]);
+
 	// Tipologia attuatore
-	const righeModello = righe.filter(r => !s.modello || r.modello === s.modello);
+	const righeModello = righeMarcaValvola.filter(r => !s.variante || r.variante === s.variante);
 	const tipologie = unici(righeModello.map(r => r.tipologia));
 	creaTag(document.getElementById('tipologiaTags'), tipologie, s.tipologia, null, val => {
 		s.tipologia = s.tipologia === val ? null : val;
@@ -92,17 +109,17 @@ function aggiornaTagUI(dati) {
 		aggiorna();
 	}, val => VIE_LABEL[val]);
 
-	// Opzione navale: visibile solo se la riga prevede il kit INOX-NAVI (*)
-	const navaleBox = document.getElementById('navaleBox');
-	const navaleCheck = document.getElementById('navaleCheck');
+	// Opzione corpo inox: visibile solo se la riga prevede il kit corpo inox (*)
+	const corpoInoxBox = document.getElementById('corpoInoxBox');
+	const corpoInoxCheck = document.getElementById('corpoInoxCheck');
 	const rigaUnica = s.modello && s.tipologia && s.misura ? righeMisura[0] : null;
-	const prevedeNavale = !!rigaUnica?.opzioni.some(o => o.navale && marcaOk(o));
-	if (navaleBox) navaleBox.style.display = prevedeNavale ? '' : 'none';
-	if (!prevedeNavale) s.navale = false;
-	if (navaleCheck) {
-		navaleCheck.checked = s.navale;
-		navaleCheck.onchange = () => {
-			s.navale = navaleCheck.checked;
+	const prevedeCorpoInox = !!rigaUnica?.opzioni.some(o => o.corpoInox && marcaOk(o));
+	if (corpoInoxBox) corpoInoxBox.style.display = prevedeCorpoInox ? '' : 'none';
+	if (!prevedeCorpoInox) s.corpoInox = false;
+	if (corpoInoxCheck) {
+		corpoInoxCheck.checked = s.corpoInox;
+		corpoInoxCheck.onchange = () => {
+			s.corpoInox = corpoInoxCheck.checked;
 			if (window.onSelezioneCambiata) window.onSelezioneCambiata();
 		};
 	}

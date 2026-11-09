@@ -32,7 +32,9 @@ function misuraDaDescrizione(desc) {
 const norm = s => String(s || '').replace(/\s+/g, ' ').trim().toUpperCase();
 const famiglia = modello => modello.split(' ')[0];
 const etichetta = modello => D.modelli[modello]?.etichetta || modello;
-const tipAbbr = t => t.replace('NON MODULANTI', 'ON-OFF').replace('MODULANTI', 'MOD');
+// Serie = modello + variante ("GMC", "GMC Schrader", "GMC Ibrida")
+const serieRiga = r => nomeSerie(etichetta(r.modello), r.variante);
+const tipAbbr = t => t === 'MODULANTE' ? 'MOD' : t;  // tipologia riga = tipo attuatore
 
 function pill(code, meta = '', cls = '', title = '') {
 	return `<span class="pill ${cls}" title="${h(title || meta || code)}">`
@@ -51,7 +53,7 @@ const COLORE_NM = { 20: 'c-green', 40: 'c-blue', 90: 'c-orange', 160: 'c-pink' }
 const coloreNm = nm => 'c ' + (nm ? (COLORE_NM[nm] || 'c-slate') : 'c-teal'); // senza Nm = Watergate
 const COLORE_MARCA = { GMC: 'c-sky', REF: 'c-indigo', REFRIGERA: 'c-indigo', OLAB: 'c-lime' };
 const coloreMarca = m => 'c ' + (COLORE_MARCA[m] || 'c-slate');
-const coloreFamiglia = modello => modello.includes('IBRIDA') ? 'c c-purple' : coloreMarca(famiglia(modello));
+const coloreFamiglia = modello => coloreMarca(famiglia(modello));
 const COLORE_CORPO = { INOX: 'c-silver', OTTONE: 'c-gold' };
 const COLORE_MARCA_ATT = { BELIMO: 'c-slate', WATERGATE: 'c-teal' };
 const coloreMarcaAttuatore = m => 'c ' + (COLORE_MARCA_ATT[m] || 'c-slate');
@@ -65,17 +67,23 @@ function nmDaTesto(testo) {
 	return m ? Number(m[1]) : null;
 }
 
+// Colore = marca valvola. Ibrida (connessioni INOX/K65) è una proprietà: badge a parte, non un colore.
 function coloreValvola(v) {
 	if (!v.disponibile) return 'pill-strike pill-na';
-	if (v.connessioni === IBRIDA) return 'c c-purple';
 	return coloreMarca(v.marca);
 }
+
+const ibridaBadge = () => '<span class="pill-flag" title="Ibrida: connessioni INOX / K65">INOX/K65</span>';
 
 function valvolaPill(codice, conMeta = true) {
 	const v = D.valvole[codice];
 	if (!v) return pill(codice, 'non in anagrafica', 'pill-err');
-	const title = [v.descrizione, v.corpo ? `Corpo ${v.corpo}` : '', v.connessioni ? `Connessioni ${v.connessioni}` : '', v.note].filter(Boolean).join(' · ');
-	return pill(codice, conMeta ? v.descrizione : '', coloreValvola(v), title);
+	const title = [v.descrizione, v.passaggio || '', v.corpo ? `Corpo ${v.corpo}` : '', v.connessioni ? `Connessioni ${v.connessioni}` : '', v.note].filter(Boolean).join(' · ');
+	const html = pill(codice, conMeta ? v.descrizione : '', coloreValvola(v), title);
+	// Proprietà come badge: ibrida (connessioni INOX/K65) e corpo ottone (eccezione: la norma è inox)
+	const badge = (v.connessioni === IBRIDA ? ibridaBadge() : '')
+		+ (v.corpo === 'OTTONE' ? '<span class="pill-flag pill-flag-ottone" title="Corpo in ottone">OTTONE</span>' : '');
+	return badge ? html.replace(/<\/span>$/, badge + '</span>') : html;
 }
 
 function kitPill(codice, conMeta = true) {
@@ -88,6 +96,19 @@ function adattatorePill(codice, conMeta = true) {
 	const a = D.adattatori[codice];
 	if (!a) return pill(codice, 'non in anagrafica', 'pill-err');
 	return pill(codice, conMeta ? a.descrizione : '', coloreNm(nmDaTesto(a.descrizione)), a.descrizione);
+}
+
+// Tipo di sfera (proprietà valvola), distinto dal tipo di attuatore
+function passaggioTag(p) {
+	if (!p) return tag('sfera ?', 'pill-gap');
+	return p === 'V-PORT' ? tag('V-PORT', 'pass-v') : tag('FULL PASSAGE', 'pass-full');
+}
+
+// Preferenziale: GENERALE (GMC) / NAVALE (REF corpo inox) / non preferenziale
+function prefTag(p) {
+	if (p === 'GENERALE') return tag('PREFERENZIALE', 'pill-ok');
+	if (p === 'NAVALE') return tag('PREF. NAVALE', 'c c-sky');
+	return '<span class="res-muted">no</span>';
 }
 
 function tipoTag(tipo) {
@@ -105,12 +126,14 @@ function attuatorePill(codice, conMeta = true) {
 	return `${pill(codice, conMeta ? meta : '', coloreNm(a.nm), a.descrizione)} ${tipoTag(a.tipo)}`;
 }
 
-function legendaColori(parti = ['nm', 'valvole', 'corpo', 'tipo']) {
+function legendaColori(parti = ['nm', 'valvole', 'proprieta', 'corpo', 'tipo']) {
 	const voce = (cls, testo) => `<span>${tag(testo, cls)}</span>`;
 	const gruppi = {
 		nm: ['Coppia kit · adattatore · attuatore', [['c c-green', '20 Nm'], ['c c-blue', '40 Nm'], ['c c-orange', '90 Nm'], ['c c-pink', '160 Nm'], ['c c-teal', 'Watergate']]],
-		valvole: ['Valvole', [['c c-sky', 'GMC'], ['c c-purple', 'Ibrida INOX/K65'], ['c c-indigo', 'Refrigera'], ['c c-lime', 'OLAB'], ['pill-strike pill-na', 'non disponibile']]],
+		valvole: ['Marca valvola', [['c c-sky', 'GMC'], ['c c-indigo', 'Refrigera'], ['c c-lime', 'OLAB'], ['pill-strike pill-na', 'non disponibile']]],
+		proprieta: ['Proprietà', [['pill-flag-leg', 'INOX/K65 = ibrida'], ['pill-flag-leg pill-flag-ottone', 'OTTONE = corpo ottone']]],
 		corpo: ['Corpo', [['c c-silver', 'INOX'], ['c c-gold', 'OTTONE']]],
+		passaggio: ['Sfera', [['pass-full', 'FULL PASSAGE'], ['pass-v', 'V-PORT']]],
 		tipo: ['Attuatore', [['t-onoff', 'ON-OFF'], ['t-mod', 'MOD']]],
 		marca: ['Marca attuatore', [['c c-slate', 'Belimo'], ['c c-teal', 'Watergate']]],
 		stato: ['Celle', [['pill-gap', 'manca = buco da verificare'], ['pill-na', 'non esiste = confermata inesistente'], ['pill-na', 'n/p = non prevista']]]
@@ -119,7 +142,7 @@ function legendaColori(parti = ['nm', 'valvole', 'corpo', 'tipo']) {
 }
 
 function rifRiga(r, vie) {
-	return `${etichetta(r.modello)} · ${tipAbbr(r.tipologia)} · ${r.misura}${vie ? ' · ' + VIE_LABEL[vie] : ''}`;
+	return `${serieRiga(r)} · ${tipAbbr(r.tipologia)} · ${r.misura}${vie ? ' · ' + VIE_LABEL[vie] : ''}`;
 }
 
 // ---------------------------------------------------------------- caricamento
@@ -136,7 +159,7 @@ function caricaDati() {
 	const posRiga = Object.fromEntries(righe.map((r, i) => [r.id, i]));
 	const matrice = query('SELECT * FROM matrice').sort((a, b) =>
 		posRiga[a.accoppiamento_id] - posRiga[b.accoppiamento_id] || a.vie.localeCompare(b.vie)
-		|| a.ordine - b.ordine || a.navale - b.navale);
+		|| a.ordine - b.ordine || a.corpo_inox - b.corpo_inox);
 
 	D = {
 		impostazioni: Object.fromEntries(query('SELECT * FROM impostazioni').map(r => [r.chiave, r.valore])),
@@ -181,16 +204,16 @@ function calcolaCopertura() {
 	D.righe.forEach(r => {
 		const f = famiglie.find(x => x.nome === famiglia(r.modello));
 		f.misure.add(r.misura);
-		if (!f.colonne.find(c => c.modello === r.modello && c.tipologia === r.tipologia)) {
-			f.colonne.push({ modello: r.modello, tipologia: r.tipologia });
+		if (!f.colonne.find(c => c.modello === r.modello && c.variante === r.variante && c.tipologia === r.tipologia)) {
+			f.colonne.push({ modello: r.modello, variante: r.variante, tipologia: r.tipologia });
 		}
 	});
 
 	famiglie.forEach(f => {
 		f.misure = [...f.misure].sort((a, b) => misuraValore(a) - misuraValore(b));
 		f.colonne.forEach(c => {
-			const righeCol = D.righe.filter(r => r.modello === c.modello && r.tipologia === c.tipologia);
-			const ibrida = c.modello.includes('IBRIDA');
+			const righeCol = D.righe.filter(r => r.modello === c.modello && r.variante === c.variante && r.tipologia === c.tipologia);
+			const ibrida = c.variante === 'IBRIDA';
 			// Una via è "prevista" nella colonna se almeno una misura la usa
 			c.prevista = {
 				'2': righeCol.some(r => r.valvola_2vie),
@@ -206,13 +229,13 @@ function calcolaCopertura() {
 					if (vie === '3' && ibrida) return { vie, stato: 'na', motivo: 'Le ibride esistono solo 2-vie' };
 					if (!c.prevista[vie]) return { vie, stato: 'na', motivo: `${VIE_LABEL[vie]} non prevista per questa serie` };
 					// Valvola censita ma dichiarata inesistente (es. ibrida 48 mm)?
-					const parole = c.modello.split(' ');
+					const parole = [c.modello, c.variante !== 'STANDARD' ? c.variante : null].filter(Boolean);
 					const giust = Object.values(D.valvole).find(v => !v.disponibile
 						&& misuraDaDescrizione(v.descrizione) === mis
 						&& parole.every(p => norm(v.descrizione).includes(p))
 						&& (vie === '3') === norm(v.descrizione).includes('3-VIE'));
 					if (giust) return { vie, stato: 'giustificato', codice: giust.codice, motivo: giust.note };
-					const conf = D.inesistenti.find(x => x.modello === c.modello && x.tipologia === c.tipologia && x.misura === mis && x.vie === vie);
+					const conf = D.inesistenti.find(x => x.modello === c.modello && x.variante === c.variante && x.tipologia === c.tipologia && x.misura === mis && x.vie === vie);
 					if (conf) return { vie, stato: 'inesistente', motivo: conf.nota || 'Confermata inesistente' };
 					return { vie, stato: 'buco', motivo: r ? 'valvola mancante' : 'misura non presente' };
 				});
@@ -237,7 +260,7 @@ function calcolaControlli() {
 		'Le righe "IBRIDA" usano solo valvole INOX/K65 e le valvole INOX/K65 stanno solo in righe "IBRIDA".',
 		query(`SELECT a.*, v.codice, CASE WHEN v.codice = a.valvola_2vie THEN '2' ELSE '3' END AS vie
 			FROM accoppiamenti a JOIN valvole v ON v.codice IN (a.valvola_2vie, a.valvola_3vie)
-			WHERE (a.modello LIKE '%IBRIDA%') <> (COALESCE(v.connessioni, '') = ?)`, [IBRIDA]).map(x => rigaV(x)));
+			WHERE (a.variante = 'IBRIDA') <> (COALESCE(v.connessioni, '') = ?)`, [IBRIDA]).map(x => rigaV(x)));
 
 	add('err', 'Valvole non disponibili usate',
 		'Una valvola marcata come inesistente/non disponibile non deve essere proposta.',
@@ -264,18 +287,24 @@ function calcolaControlli() {
 			.map(x => `${tag(rifRiga(x.r, x.vie))} ${valvolaPill(x.codice)} <span class="pill-meta">descrizione: ${h(misuraDaDescrizione(D.valvole[x.codice].descrizione))}</span>`));
 
 	add('err', 'Tipologia coerente con l\'attuatore',
-		'Righe NON MODULANTI → attuatore ON-OFF; righe MODULANTI → attuatore MODULANTE.',
+		'Righe ON-OFF → attuatore ON-OFF; righe MODULANTE → attuatore MODULANTE.',
 		query(`SELECT a.*, o.attuatore FROM accoppiamenti a
 			JOIN opzioni o ON o.accoppiamento_id = a.id JOIN attuatori t ON t.codice = o.attuatore
-			WHERE (a.tipologia LIKE 'NON %') <> (t.tipo = 'ON-OFF')`)
+			WHERE a.tipologia <> t.tipo`)
 			.map(x => `${tag(rifRiga(x))} ${attuatorePill(x.attuatore)}`));
 
-	add('warn', 'Valvola coerente con la tipologia',
-		'Valvole "MODULANTE"/"V-PORT" solo in righe MODULANTI e viceversa.',
-		query(`SELECT a.*, v.codice, CASE WHEN v.codice = a.valvola_2vie THEN '2' ELSE '3' END AS vie
+	add('warn', 'Passaggio sfera coerente con l\'attuatore',
+		'Sfera V-PORT con attuatore MODULANTE, sfera FULL PASSAGE con attuatore ON-OFF.',
+		query(`SELECT a.*, v.codice, v.passaggio, CASE WHEN v.codice = a.valvola_2vie THEN '2' ELSE '3' END AS vie
 			FROM accoppiamenti a JOIN valvole v ON v.codice IN (a.valvola_2vie, a.valvola_3vie)
-			WHERE (a.tipologia LIKE 'NON %') = (v.descrizione LIKE '%MODULANTE%' OR v.descrizione LIKE '%V-PORT%')`)
-			.map(x => rigaV(x)));
+			WHERE v.passaggio IS NOT NULL AND (a.tipologia = 'MODULANTE') <> (v.passaggio = 'V-PORT')`)
+			.map(x => rigaV(x, passaggioTag(x.passaggio))));
+
+	add('warn', 'Passaggio sfera da definire',
+		'Valvole senza FULL PASSAGE / V-PORT: prima quelle già proposte dal selettore.',
+		Object.values(D.valvole).filter(v => !v.passaggio)
+			.sort((a, b) => !!D.uso.valvole[b.codice] - !!D.uso.valvole[a.codice])
+			.map(v => `${D.uso.valvole[v.codice] ? tag('in uso', 'pill-warn') : tag('non in uso')} ${valvolaPill(v.codice)}`));
 
 	add('err', 'Coppia Nm kit ↔ attuatore',
 		'Il kit (es. "40 Nm") è abbinato a un attuatore della stessa coppia.',
@@ -290,7 +319,7 @@ function calcolaControlli() {
 	add('err', 'Stessa regola per misura in tutte le serie GMC',
 		'GMC standard, Schrader e Ibrida: a parità di misura stesso adattatore, kit e attuatore.',
 		query(`SELECT a.misura,
-				GROUP_CONCAT(a.modello || ': ' || COALESCE(o.adattatore, '-') || ' / ' || o.kit || ' / ' || o.attuatore, ' | ') AS dettaglio
+				GROUP_CONCAT(a.variante || ': ' || COALESCE(o.adattatore, '-') || ' / ' || o.kit || ' / ' || o.attuatore, ' | ') AS dettaglio
 			FROM accoppiamenti a JOIN opzioni o ON o.accoppiamento_id = a.id
 			WHERE a.modello LIKE 'GMC%'
 			GROUP BY a.misura
@@ -307,12 +336,38 @@ function calcolaControlli() {
 		'Le combinazioni segnate "non esiste" non devono avere una valvola negli accoppiamenti.',
 		query(`SELECT a.*, m.vie, CASE m.vie WHEN '2' THEN a.valvola_2vie ELSE a.valvola_3vie END AS codice
 			FROM misure_inesistenti m JOIN accoppiamenti a
-				ON a.modello = m.modello AND a.tipologia = m.tipologia AND a.misura = m.misura
+				ON a.modello = m.modello AND a.variante = m.variante AND a.tipologia = m.tipologia AND a.misura = m.misura
 			WHERE CASE m.vie WHEN '2' THEN a.valvola_2vie ELSE a.valvola_3vie END IS NOT NULL`).map(x => rigaV(x)));
+
+	add('err', 'REF in pollici: corpo inox',
+		'Regola: tutte le valvole Refrigera con misura in pollici hanno corpo INOX.',
+		Object.values(D.valvole)
+			.filter(v => v.marca === 'REFRIGERA' && v.descrizione.includes('"') && v.corpo !== 'INOX')
+			.map(v => `${valvolaPill(v.codice)} ${corpoTag(v.corpo)}`));
+
+	const eccezioni = regola => new Set(query('SELECT valvola FROM eccezioni_regole WHERE regola = ?', [regola]).map(e => e.valvola));
+	const eccRefMm = eccezioni('REF_MM_OTTONE');
+	add('err', 'REF in millimetri: corpo ottone',
+		`Regola: le valvole Refrigera con misura in millimetri (2 e 3 vie) hanno corpo OTTONE. Eccezioni confermate (corpo inox): ${[...eccRefMm].map(c => `${c} ${D.valvole[c]?.descrizione || ''}`).join('; ') || 'nessuna'}.`,
+		Object.values(D.valvole)
+			.filter(v => v.marca === 'REFRIGERA' && !v.descrizione.includes('"') && v.corpo !== 'OTTONE' && !eccRefMm.has(v.codice))
+			.map(v => `${valvolaPill(v.codice)} ${corpoTag(v.corpo)} <span class="pill-meta">${h(v.note || '')}</span>`));
+
+	add('err', 'GMC: corpo ottone',
+		'Regola: tutte le GMC (2 vie, 3 vie, Schrader, ibride) hanno corpo OTTONE.',
+		Object.values(D.valvole)
+			.filter(v => v.marca === 'GMC' && v.corpo !== 'OTTONE')
+			.map(v => `${valvolaPill(v.codice)} ${corpoTag(v.corpo)}`));
+
+	add('err', 'GMC ibride: corpo ottone, connessioni INOX/K65',
+		'Regola: tutte le GMC ibride hanno corpo OTTONE e connessioni una inox e una K65.',
+		Object.values(D.valvole)
+			.filter(v => v.marca === 'GMC' && /IBRIDA/i.test(v.descrizione) && (v.corpo !== 'OTTONE' || v.connessioni !== IBRIDA))
+			.map(v => `${valvolaPill(v.codice)} ${corpoTag(v.corpo)} ${tag(v.connessioni || 'connessioni ?')}`));
 
 	add('err', 'Combinazioni senza codice',
 		'Ogni combinazione valvola + adattatore + kit + attuatore richiesta dalle regole ha un codice CMB in matrice.',
-		D.matrice.filter(m => !m.codice).map(m => `${tag(`${etichetta(m.modello)} · ${tipAbbr(m.tipologia)} · ${m.misura} · ${VIE_LABEL[m.vie]}`)} ${valvolaPill(m.valvola, false)} ${m.adattatore ? adattatorePill(m.adattatore, false) : ''} ${kitPill(m.kit, false)} ${attuatorePill(m.attuatore, false)}`));
+		D.matrice.filter(m => !m.codice).map(m => `${tag(`${serieRiga(m)} · ${tipAbbr(m.tipologia)} · ${m.misura} · ${VIE_LABEL[m.vie]}`)} ${valvolaPill(m.valvola, false)} ${m.adattatore ? adattatorePill(m.adattatore, false) : ''} ${kitPill(m.kit, false)} ${attuatorePill(m.attuatore, false)}`));
 
 	const attese = new Set(D.matrice.map(m => m.codice).filter(Boolean));
 	add('warn', 'Codici CMB obsoleti',
@@ -341,7 +396,7 @@ function calcolaControlli() {
 	const buchi = [];
 	COPERTURA.forEach(f => f.colonne.forEach(c => f.misure.forEach(mis => c.celle[mis]
 		.filter(x => x.stato === 'buco')
-		.forEach(x => buchi.push(`${tag(`${etichetta(c.modello)} · ${tipAbbr(c.tipologia)} · ${mis} · ${VIE_LABEL[x.vie]}`, 'pill-gap')} <span class="pill-meta">${h(x.motivo)}</span>`)))));
+		.forEach(x => buchi.push(`${tag(`${serieRiga(c)} · ${tipAbbr(c.tipologia)} · ${mis} · ${VIE_LABEL[x.vie]}`, 'pill-gap')} <span class="pill-meta">${h(x.motivo)}</span>`)))));
 	add('warn', 'Buchi di copertura',
 		'Misure presenti nella famiglia ma senza valvola in questa serie (dettaglio nella scheda Copertura).',
 		buchi);
@@ -357,7 +412,7 @@ function calcolaControlli() {
 			.map(v => `${valvolaPill(v.codice)} <span class="pill-meta">${h(v.note || '')}</span>`));
 
 	const maiUsati = [
-		...Object.values(D.kit).filter(k => !D.uso.kit[k.codice] && k.codice !== D.impostazioni.kit_navale).map(k => `${tag('Kit')} ${kitPill(k.codice)}`),
+		...Object.values(D.kit).filter(k => !D.uso.kit[k.codice] && k.codice !== D.impostazioni.kit_corpo_inox).map(k => `${tag('Kit')} ${kitPill(k.codice)}`),
 		...Object.values(D.adattatori).filter(a => !D.uso.adattatori[a.codice]).map(a => `${tag('Adattatore')} ${adattatorePill(a.codice)}`),
 		...Object.values(D.attuatori).filter(a => !D.uso.attuatori[a.codice]).map(a => `${tag('Attuatore')} ${attuatorePill(a.codice)}`)
 	];
@@ -397,13 +452,13 @@ function vistaControlli() {
 }
 
 function vistaCopertura() {
-	return `<p class="db-hint">Misure (righe) × serie (colonne). Ogni cella mostra la valvola 2-vie (2V) e 3-vie (3V).</p>${legendaColori(['valvole', 'stato'])}`
+	return `<p class="db-hint">Misure (righe) × serie (colonne). Ogni cella mostra la valvola 2-vie (2V) e 3-vie (3V).</p>${legendaColori(['valvole', 'proprieta', 'stato'])}`
 		+ COPERTURA.map(f => `
 		<section class="panel db-section">
 			<div class="panel-head"><span>Famiglia ${tag(f.nome, coloreMarca(f.nome))}</span></div>
 			<div class="panel-body-flush">
 				<table class="data-table cov-table">
-					<thead><tr><th>Misura</th>${f.colonne.map(c => `<th>${h(etichetta(c.modello))}<br><span class="res-muted">${h(c.tipologia)}</span></th>`).join('')}</tr></thead>
+					<thead><tr><th>Misura</th>${f.colonne.map(c => `<th>${h(serieRiga(c))}<br><span class="res-muted">${h(c.tipologia)}</span></th>`).join('')}</tr></thead>
 					<tbody>
 						${f.misure.map(mis => `<tr data-s="${h(mis)}">
 							<td>${h(mis)}</td>
@@ -438,11 +493,11 @@ function vistaAccoppiamenti() {
 	const marcaOk = o => !S.filtroMarca || o.marca === S.filtroMarca;
 	const righe = D.righe.filter(r => (!S.filtroModello || r.modello === S.filtroModello) && r.opzioni.some(marcaOk));
 	const body = righe.map(r => {
-		const g = `${etichetta(r.modello)} — ${r.tipologia}`;
+		const g = `${serieRiga(r)} — ${r.tipologia}`;
 		const testa = g !== gruppo ? `<tr class="group-row"><td colspan="4" class="grp ${coloreFamiglia(r.modello)}">${h(g)}</td></tr>` : '';
 		gruppo = g;
 		const opz = r.opzioni.filter(marcaOk).map(o => {
-			const note = [o.vie ? tag(`solo ${VIE_LABEL[o.vie]}`) : '', o.navale ? tag(`navale → ${D.impostazioni.kit_navale}`) : ''].join(' ');
+			const note = [o.vie ? tag(`solo ${VIE_LABEL[o.vie]}`) : '', o.corpo_inox ? tag(`corpo inox → ${D.impostazioni.kit_corpo_inox}`) : ''].join(' ');
 			return `<div class="opz-row">
 				${marcaTag(o.marca)}
 				${o.adattatore ? adattatorePill(o.adattatore, false) : pill('', 'no adattatore', 'pill-na')}
@@ -456,11 +511,11 @@ function vistaAccoppiamenti() {
 		return testa + `<tr data-s="${h(s)}">
 			<td class="code-cell"><span class="code">${h(r.misura)}</span></td>
 			<td>${r.valvola_2vie ? valvolaPill(r.valvola_2vie) : pill('', 'NA', 'pill-na')}</td>
-			<td>${r.valvola_3vie ? valvolaPill(r.valvola_3vie) : pill('', r.modello.includes('IBRIDA') ? 'non ammessa' : 'NA', 'pill-na')}</td>
+			<td>${r.valvola_3vie ? valvolaPill(r.valvola_3vie) : pill('', r.variante === 'IBRIDA' ? 'non ammessa' : 'NA', 'pill-na')}</td>
 			<td><div class="opz-list">${opz}</div></td>
 		</tr>`;
 	}).join('');
-	return `${legendaColori(['nm', 'valvole', 'marca', 'tipo'])}<section class="panel">${filtro}<div class="panel-body-flush">
+	return `${legendaColori(['nm', 'valvole', 'proprieta', 'passaggio', 'marca', 'tipo'])}<section class="panel">${filtro}<div class="panel-body-flush">
 		<table class="data-table acc-table">
 			<thead><tr><th>Misura</th><th>Valvola 2-vie</th><th>Valvola 3-vie</th><th>Motorizzazione: marca · adattatore · kit → attuatore</th></tr></thead>
 			<tbody>${body}</tbody>
@@ -472,7 +527,7 @@ function usoPills(lista) {
 	// raggruppa per modello + tipologia + vie: "GMC · ON-OFF · 2V: 10, 12, 16 mm"
 	const gruppi = {};
 	lista.forEach(({ r, vie }) => {
-		const k = `${etichetta(r.modello)} · ${tipAbbr(r.tipologia)}${vie ? ' · ' + VIE_LABEL[vie] : ''}`;
+		const k = `${serieRiga(r)} · ${tipAbbr(r.tipologia)}${vie ? ' · ' + VIE_LABEL[vie] : ''}`;
 		(gruppi[k] ||= { modello: r.modello, misure: new Set() }).misure.add(r.misura);
 	});
 	return `<div class="pill-wrap">${Object.entries(gruppi).map(([k, g]) =>
@@ -484,6 +539,7 @@ function vistaValvole() {
 		tutte: ['Tutte', () => true],
 		...Object.fromEntries(query('SELECT DISTINCT marca FROM valvole WHERE marca IS NOT NULL ORDER BY marca')
 			.map(({ marca }) => ['marca:' + marca, [marca, v => v.marca === marca]])),
+		pref: ['Preferenziali', v => !!v.preferenziale],
 		ibride: ['Ibride INOX/K65', v => v.connessioni === IBRIDA],
 		nonusate: ['Non usate', v => !D.uso.valvole[v.codice]],
 		nondisp: ['Non disponibili', v => !v.disponibile]
@@ -497,11 +553,13 @@ function vistaValvole() {
 	let gruppo = '';
 	const body = lista.map(v => {
 		const g = `${v.marca || '—'}${v.serie ? ' — ' + v.serie : ''}`;
-		const testa = g !== gruppo ? `<tr class="group-row"><td colspan="7" class="grp ${coloreMarca(v.marca)}">${h(g)}</td></tr>` : '';
+		const testa = g !== gruppo ? `<tr class="group-row"><td colspan="9" class="grp ${coloreMarca(v.marca)}">${h(g)}</td></tr>` : '';
 		gruppo = g;
 		return testa + `<tr data-s="${h([v.codice, v.descrizione, v.marca, v.serie, v.connessioni, v.note].join(' '))}" class="${v.disponibile ? '' : 'row-dim'}">
 			<td>${valvolaPill(v.codice, false)}</td>
 			<td class="desc-cell">${h(v.descrizione)}</td>
+			<td>${prefTag(v.preferenziale)}</td>
+			<td>${passaggioTag(v.passaggio)}</td>
 			<td>${corpoTag(v.corpo)}</td>
 			<td>${v.connessioni ? tag(v.connessioni, v.connessioni === IBRIDA ? 'c c-purple' : 'c ' + (COLORE_CORPO[v.connessioni] || 'c-slate')) : '<span class="res-muted">—</span>'}</td>
 			<td>${v.disponibile ? tag('DISPONIBILE', 'pill-ok') : tag('NON DISPONIBILE', 'pill-err')}</td>
@@ -509,11 +567,11 @@ function vistaValvole() {
 			<td class="res-muted">${h(v.note || '')}</td>
 		</tr>`;
 	}).join('');
-	return `${legendaColori(['valvole', 'corpo'])}<section class="panel">
+	return `${legendaColori(['valvole', 'proprieta', 'passaggio', 'corpo'])}<section class="panel">
 		<div class="filter-row">${Object.entries(filtri).map(([k, [lab, fn]]) =>
 			`<button class="tag-btn ${S.filtroValvole === k ? 'selected' : ''}" data-fv="${h(k)}">${h(lab)} <span class="res-muted">${Object.values(D.valvole).filter(fn).length}</span></button>`).join('')}</div>
 		<div class="panel-body-flush"><table class="data-table">
-			<thead><tr><th>Codice</th><th>Descrizione</th><th>Corpo</th><th>Connessioni</th><th>Stato</th><th>Usata in</th><th>Note</th></tr></thead>
+			<thead><tr><th>Codice</th><th>Descrizione</th><th>Preferenziale</th><th>Sfera</th><th>Corpo</th><th>Connessioni</th><th>Stato</th><th>Usata in</th><th>Note</th></tr></thead>
 			<tbody>${body}</tbody>
 		</table></div></section>`;
 }
@@ -557,7 +615,7 @@ function vistaPunti() {
 
 // ---------------------------------------------------------------- matrice CAD/PDM
 const sqlStr = v => v === null || v === undefined || v === '' ? 'NULL' : `'${String(v).replace(/'/g, "''")}'`;
-const contesto = m => `${etichetta(m.modello)} · ${tipAbbr(m.tipologia)} · ${m.misura} · ${VIE_LABEL[m.vie]}`;
+const contesto = m => `${serieRiga(m)} · ${tipAbbr(m.tipologia)} · ${m.misura} · ${VIE_LABEL[m.vie]}`;
 
 function prossimoCodice(usati) {
 	let n = Math.max(0, ...[...usati].map(c => Number(c.slice(4))));
@@ -582,12 +640,12 @@ function vistaMatrice() {
 
 	let gruppo = '';
 	const body = lista.map(m => {
-		const g = `${etichetta(m.modello)} — ${m.tipologia}`;
+		const g = `${serieRiga(m)} — ${m.tipologia}`;
 		const testa = g !== gruppo ? `<tr class="group-row"><td colspan="8" class="grp ${coloreFamiglia(m.modello)}">${h(g)}</td></tr>` : '';
 		gruppo = g;
 		return testa + `<tr data-s="${h([m.codice, m.modello, m.tipologia, m.misura, m.valvola, m.adattatore, m.kit, m.attuatore, m.marca_attuatore, m.codice_pdm, m.codice_cad, m.note].join(' '))}">
 			<td>${m.codice ? tag(m.codice, 'pill-cmb') : tag('SENZA CODICE', 'pill-err')}</td>
-			<td><div class="pill-wrap">${tag(m.misura)} ${tag(VIE_LABEL[m.vie])} ${marcaTag(m.marca_attuatore)} ${m.navale ? tag('NAVALE', 'c c-sky') : ''}</div></td>
+			<td><div class="pill-wrap">${tag(m.misura)} ${tag(VIE_LABEL[m.vie])} ${passaggioTag(D.valvole[m.valvola]?.passaggio)} ${tipoTag(m.tipologia)} ${marcaTag(m.marca_attuatore)} ${m.corpo_inox ? tag('CORPO INOX', 'c c-silver') : ''}</div></td>
 			<td>${valvolaPill(m.valvola)}</td>
 			<td>${m.adattatore ? adattatorePill(m.adattatore, false) : pill('', 'nessuno', 'pill-na')}</td>
 			<td>${kitPill(m.kit, false)}</td>
@@ -615,7 +673,7 @@ function vistaMatrice() {
 				<textarea id="sqlNuove" class="sql-box" readonly>${h(insert)}</textarea>
 				<button class="btn btn-secondary" data-copia="sqlNuove">Copia SQL</button></div>` : ''}
 		</div></section>
-		${legendaColori(['nm', 'valvole', 'marca'])}
+		${legendaColori(['nm', 'valvole', 'proprieta', 'passaggio', 'marca', 'tipo'])}
 		<section class="panel">
 			<div class="filter-row">
 				<button class="tag-btn ${!S.matriceModello ? 'selected' : ''}" data-mmodello="">Tutti i modelli</button>
@@ -626,7 +684,7 @@ function vistaMatrice() {
 					`<button class="tag-btn ${S.matriceStato === k ? 'selected' : ''}" data-mstato="${k}">${l}</button>`).join('')}
 			</div>
 			<div class="panel-body-flush"><table class="data-table mat-table">
-				<thead><tr><th>Codice</th><th>Misura · vie · marca</th><th>Valvola</th><th>Adattatore</th><th>Kit</th><th>Attuatore</th><th>Codice PDM</th><th>Codice CAD</th></tr></thead>
+				<thead><tr><th>Codice</th><th>Misura · vie · sfera · attuatore</th><th>Valvola</th><th>Adattatore</th><th>Kit</th><th>Attuatore</th><th>Codice PDM</th><th>Codice CAD</th></tr></thead>
 				<tbody>${body}</tbody>
 			</table></div>
 		</section>`;
@@ -644,15 +702,16 @@ function caricaXlsx() {
 	});
 }
 
-const COLONNE_MATRICE = ['Codice combinazione', 'Modello valvola', 'Tipologia', 'Misura', 'Vie', 'Marca attuatore', 'Navale',
-	'Valvola', 'Descrizione valvola', 'Adattatore', 'Descrizione adattatore', 'Kit', 'Descrizione kit',
+const COLONNE_MATRICE = ['Codice combinazione', 'Modello valvola', 'Variante', 'Misura', 'Vie', 'Sfera', 'Tipo attuatore', 'Marca attuatore', 'Kit corpo inox',
+	'Valvola', 'Descrizione valvola', 'Valvola preferenziale', 'Adattatore', 'Descrizione adattatore', 'Kit', 'Descrizione kit',
 	'Attuatore', 'Descrizione attuatore', 'Codice PDM', 'Codice CAD', 'Note'];
 
 async function esportaMatrice() {
 	const XLSX = await caricaXlsx();
 	const righe = D.matrice.filter(m => m.codice).map(m => [
-		m.codice, etichetta(m.modello), m.tipologia, m.misura, VIE_LABEL[m.vie], m.marca_attuatore, m.navale ? 'SI' : '',
+		m.codice, etichetta(m.modello), VARIANTE_LABEL[m.variante] || m.variante, m.misura, VIE_LABEL[m.vie], D.valvole[m.valvola]?.passaggio || 'DA DEFINIRE', m.tipologia, m.marca_attuatore, m.corpo_inox ? 'SI' : '',
 		m.valvola, D.valvole[m.valvola]?.descrizione || '',
+		({ GENERALE: 'SI', NAVALE: 'SI (navale)' })[D.valvole[m.valvola]?.preferenziale] || 'NO',
 		m.adattatore || '', m.adattatore ? D.adattatori[m.adattatore]?.descrizione || '' : 'non richiesto',
 		m.kit, D.kit[m.kit]?.descrizione || '',
 		m.attuatore, D.attuatori[m.attuatore]?.descrizione || '',
@@ -726,22 +785,22 @@ function copiaTesto(id, btn) {
 }
 
 const PRESET_SQL = {
-	'Valvole GMC': `SELECT codice, descrizione, serie, connessioni, disponibile, note
+	'Valvole GMC': `SELECT codice, descrizione, serie, passaggio, connessioni, disponibile, note
 FROM valvole WHERE marca = 'GMC'
 ORDER BY serie, descrizione;`,
-	'Matrice CAD/PDM': `SELECT codice, modello, tipologia, misura, vie, marca_attuatore,
-       valvola, adattatore, kit, attuatore, navale, codice_pdm, codice_cad
+	'Matrice CAD/PDM': `SELECT codice, modello, variante, tipologia, misura, vie, marca_attuatore,
+       valvola, adattatore, kit, attuatore, corpo_inox, codice_pdm, codice_cad
 FROM matrice
 ORDER BY codice;`,
-	'Accoppiamenti completi': `SELECT a.modello, a.tipologia, a.misura,
+	'Accoppiamenti completi': `SELECT a.modello, a.variante, a.tipologia, a.misura,
        a.valvola_2vie, a.valvola_3vie, t.brand AS marca, o.adattatore,
-       o.kit, o.attuatore, t.tipo, t.nm, o.vie, o.navale
+       o.kit, o.attuatore, t.tipo, t.nm, o.vie, o.corpo_inox
 FROM accoppiamenti a
 JOIN opzioni o   ON o.accoppiamento_id = a.id
 JOIN attuatori t ON t.codice = o.attuatore
 ORDER BY a.id, o.ordine;`,
 	'Regola GMC per misura': `SELECT a.misura, o.adattatore, o.kit, o.attuatore,
-       GROUP_CONCAT(a.modello, ', ') AS serie
+       GROUP_CONCAT(a.variante, ', ') AS varianti
 FROM accoppiamenti a JOIN opzioni o ON o.accoppiamento_id = a.id
 WHERE a.modello LIKE 'GMC%'
 GROUP BY a.misura, o.adattatore, o.kit, o.attuatore;`,

@@ -45,13 +45,13 @@ function testoArticolo(item) {
 }
 
 // Opzioni adattatore+kit+attuatore valide per la riga, le vie e la marca attuatore scelte
-// (con sostituzione kit navale)
-function opzioniPerVie(riga, vie, navale, marca) {
+// (con sostituzione kit corpo inox)
+function opzioniPerVie(riga, vie, corpoInox, marca) {
 	return riga.opzioni
 		.filter(o => (!o.vie || o.vie === vie) && (!marca || o.marca === marca))
 		.map(o => ({
 			adattatore: trovaAdattatore(o.adattatore),
-			kit: trovaKit(navale && o.navale ? dati.kitNavale : o.kit),
+			kit: trovaKit(corpoInox && o.corpoInox ? dati.kitCorpoInox : o.kit),
 			attuatore: trovaAttuatore(o.attuatore)
 		}));
 }
@@ -61,28 +61,29 @@ async function caricaDati() {
 	await apriDatabase();
 
 	const impostazioni = Object.fromEntries(query('SELECT chiave, valore FROM impostazioni').map(r => [r.chiave, r.valore]));
-	const valvola = codice => codice ? query('SELECT codice, descrizione FROM valvole WHERE codice = ?', [codice])[0] || { codice, descrizione: '' } : null;
+	const valvola = codice => codice ? query('SELECT codice, descrizione, passaggio FROM valvole WHERE codice = ?', [codice])[0] || { codice, descrizione: '' } : null;
 
 	dati = {
 		fonte: impostazioni.fonte,
-		kitNavale: impostazioni.kit_navale,
+		kitCorpoInox: impostazioni.kit_corpo_inox,
 		modelli: Object.fromEntries(query('SELECT codice, etichetta FROM modelli ORDER BY ordine').map(m => [m.codice, m.etichetta])),
 		kit: query('SELECT codice, descrizione FROM kit ORDER BY rowid'),
 		adattatori: query('SELECT codice, descrizione FROM adattatori ORDER BY rowid'),
 		attuatori: query('SELECT codice, descrizione, brand, tipo, nm AS Nm, alimentazione FROM attuatori ORDER BY rowid'),
 		accoppiamenti: ordinaPerMisura(query(`
-			SELECT a.id, a.modello, a.tipologia, a.misura, a.valvola_2vie, a.valvola_3vie
+			SELECT a.id, a.modello, a.variante, a.tipologia, a.misura, a.valvola_2vie, a.valvola_3vie
 			FROM accoppiamenti a JOIN modelli m ON m.codice = a.modello
 			ORDER BY m.ordine, a.id`)).map(r => ({
 				modello: r.modello,
+				variante: r.variante,
 				tipologia: r.tipologia,
 				misura: r.misura,
 				valvole: { '2': valvola(r.valvola_2vie), '3': valvola(r.valvola_3vie) },
 				opzioni: query(`
-					SELECT o.adattatore, o.kit, o.attuatore, o.vie, o.navale, t.brand AS marca
+					SELECT o.adattatore, o.kit, o.attuatore, o.vie, o.corpo_inox, t.brand AS marca
 					FROM opzioni o JOIN attuatori t ON t.codice = o.attuatore
 					WHERE o.accoppiamento_id = ? ORDER BY o.ordine`, [r.id])
-					.map(o => ({ ...o, navale: !!o.navale }))
+					.map(({ corpo_inox, ...o }) => ({ ...o, corpoInox: !!corpo_inox }))
 			}))
 	};
 	window.puntiImpianto = query('SELECT nome, info FROM punti_impianto ORDER BY ordine');
@@ -93,30 +94,31 @@ function getSelezioneCorrente() {
 	return {
 		puntoImpianto: document.getElementById('puntoImpiantoSelect')?.value || '',
 		modello: s.modello,
+		variante: s.variante,
 		tipologia: s.tipologia,
 		marca: s.marca,
 		misura: s.misura,
 		vie: s.vie,
-		navale: !!s.navale
+		corpoInox: !!s.corpoInox
 	};
 }
 
 function mostraRisultatoAutomatico() {
 	const s = getSelezioneCorrente();
 	// Serve tutto selezionato
-	if (!s.modello || !s.tipologia || !s.marca || !s.misura || !s.vie) {
+	if (!s.modello || !s.variante || !s.tipologia || !s.marca || !s.misura || !s.vie) {
 		document.getElementById('risultato').classList.add('hidden');
 		nascondiErrore();
 		window.risultatoCorrente = null;
 		return;
 	}
-	const riga = dati.accoppiamenti.find(r => r.modello === s.modello && r.tipologia === s.tipologia && r.misura === s.misura);
+	const riga = dati.accoppiamenti.find(r => r.modello === s.modello && r.variante === s.variante && r.tipologia === s.tipologia && r.misura === s.misura);
 	const valvola = riga?.valvole[s.vie];
 	if (!valvola) {
 		mostraErrore('Nessuna valvola disponibile per la combinazione selezionata.');
 		return;
 	}
-	const opzioni = opzioniPerVie(riga, s.vie, s.navale, s.marca);
+	const opzioni = opzioniPerVie(riga, s.vie, s.corpoInox, s.marca);
 	if (opzioni.length === 0) {
 		mostraErrore(`Nessun attuatore ${s.marca} configurato per questa combinazione.`);
 		return;
@@ -140,7 +142,8 @@ function renderRisultato({ valvola, opzioni }) {
 				: `<span class="res-desc res-muted">${vuoto}</span>`}
 		</div>`;
 
-	valvolaInfo.innerHTML = resRow('Valvola', valvola);
+	// Tipo di sfera (FULL PASSAGE / V-PORT) accanto alla descrizione
+	valvolaInfo.innerHTML = resRow('Valvola', { codice: valvola.codice, descrizione: [valvola.descrizione, valvola.passaggio].filter(Boolean).join(' · ') });
 
 	// L'adattatore dipende dall'opzione scelta (es. Watergate non lo richiede)
 	const mostraMotore = opzione => {
@@ -358,7 +361,7 @@ function mostraRecapConfigurazione() {
 
 	let gruppoCorrente = '';
 	dati.accoppiamenti.forEach(r => {
-		const gruppo = `${dati.modelli?.[r.modello] || r.modello} — ${r.tipologia}`;
+		const gruppo = `${nomeSerie(dati.modelli?.[r.modello] || r.modello, r.variante)} — ${r.tipologia}`;
 		if (gruppo !== gruppoCorrente) {
 			gruppoCorrente = gruppo;
 			html += `<tr class="recap-brand-row"><td colspan="6">${escapeHtml(gruppo)}</td></tr>`;
@@ -367,7 +370,7 @@ function mostraRecapConfigurazione() {
 		const adattatoriItems = r.opzioni.map(o => trovaAdattatore(o.adattatore) || { codice: '—', descrizione: 'non richiesto' });
 		const kitItems = r.opzioni.map(o => {
 			const k = trovaKit(o.kit);
-			const note = [o.vie ? `solo ${VIE_TESTO[o.vie]}` : '', o.navale ? `navale: ${dati.kitNavale}` : ''].filter(Boolean).join(' · ');
+			const note = [o.vie ? `solo ${VIE_TESTO[o.vie]}` : '', o.corpoInox ? `corpo inox: ${dati.kitCorpoInox}` : ''].filter(Boolean).join(' · ');
 			return { codice: k.codice, descrizione: note ? `${k.descrizione} (${note})` : k.descrizione };
 		});
 		const attuatoriHtml = r.opzioni.map(o => {
@@ -400,7 +403,7 @@ function mostraRecapConfigurazione() {
 				</tbody>
 			</table>
 		</div>
-		<p class="recap-footnote">(*) Se macchina navale usare kit INOX-NAVI codice ${escapeHtml(dati.kitNavale || '')} al posto di 25C162A.</p>
+		<p class="recap-footnote">(*) Versione corpo inox: usare il kit ${escapeHtml(dati.kitCorpoInox || '')} al posto di 25C162A.</p>
 	`;
 	recapContent.innerHTML = html;
 }
