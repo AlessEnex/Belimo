@@ -697,7 +697,7 @@ function vistaMosaico() {
 		&& (S.matriceStato === 'tutte'
 			|| (S.matriceStato === 'dacompilare' && !m.codice_pdm)
 			|| (S.matriceStato === 'compilate' && m.codice_pdm)));
-	const selezionata = lista.find(m => m.codice === S.mosaicoCodice) || null;
+	const selezionata = S.mosaicoCodice !== null ? D.matrice[S.mosaicoCodice] || null : null;
 	const modelli = D.modelliOrdine.filter(mo => D.matrice.some(m => m.modello === mo));
 	const gruppi = [];
 	lista.forEach(m => {
@@ -706,14 +706,6 @@ function vistaMosaico() {
 		if (!g) gruppi.push(g = { chiave, titolo: `${serieRiga(m)} — ${m.tipologia}`, righe: [] });
 		g.righe.push(m);
 	});
-	const dettaglio = selezionata ? `<div class="mosaic-selection" aria-live="polite">
-		<span class="mosaic-selection-label">Selezionata</span>
-		${tag(selezionata.codice, 'pill-cmb')}
-		${valvolaPill(selezionata.valvola, false)}
-		${kitPill(selezionata.kit, false)}
-		${attuatorePill(selezionata.attuatore, false)}
-		${selezionata.codice_pdm ? tag(`PDM ${selezionata.codice_pdm}`, 'pill-ok') : tag('PDM da compilare', 'pill-gap')}
-	</div>` : '';
 	const colore = m => famiglia(m.modello) === 'GMC' ? 'mosaic-gmc' : famiglia(m.modello) === 'REF' ? 'mosaic-ref' : 'mosaic-other';
 	return `
 		<section class="panel db-section"><div class="panel-body">
@@ -722,8 +714,9 @@ function vistaMosaico() {
 				${tag(`${lista.length} combinazioni`)}
 				${tag(`${lista.filter(m => m.codice_pdm).length} con PDM`, 'pill-ok')}
 				${tag(`${lista.filter(m => !m.codice_pdm).length} senza PDM`, 'pill-gap')}
+				${tag(`${lista.filter(m => m.caricata_pdm).length} caricate a PDM`, 'pill-ok')}
 			</div>
-			${dettaglio}
+			<p class="db-hint" style="margin:10px 0 0">Clicca un quadratino per vedere la configurazione del gruppo. Il pallino indica una combinazione già caricata a PDM.</p>
 		</div></section>
 		${legendaColori(['valvole'])}
 		<section class="panel">
@@ -737,10 +730,50 @@ function vistaMosaico() {
 			</div>
 			<div class="mosaic-groups">
 				${gruppi.map(g => `<section class="mosaic-group"><div class="mosaic-group-head"><span>${h(g.titolo)}</span><span>${g.righe.length}</span></div>
-					<div class="mosaic-grid">${g.righe.map(m => `<button type="button" class="mosaic-tile ${colore(m)} ${m.codice_pdm ? 'is-pdm' : 'is-uncompiled'} ${S.mosaicoCodice === m.codice ? 'is-selected' : ''}" data-mosaic="${h(m.codice || '')}" title="${h([m.codice || 'Senza codice', m.misura, VIE_LABEL[m.vie], D.valvole[m.valvola]?.descrizione || m.valvola, m.codice_pdm ? `PDM: ${m.codice_pdm}` : 'PDM da compilare'].join(' · '))}" aria-label="${h([m.codice || 'Senza codice', m.misura, `${VIE_LABEL[m.vie]}`, m.codice_pdm ? 'PDM compilato' : 'PDM da compilare'].join(', '))}">${h(m.codice ? m.codice.replace('CMB-', '') : '—')}</button>`).join('')}</div>
+					<div class="mosaic-grid">${g.righe.map(m => `<button type="button" class="mosaic-tile ${colore(m)} ${m.codice_pdm ? 'is-pdm' : 'is-uncompiled'} ${m.caricata_pdm ? 'is-caricata' : ''} ${selezionata === m ? 'is-selected' : ''}" data-mosaic="${D.matrice.indexOf(m)}" title="${h([m.codice || 'Senza codice', m.misura, VIE_LABEL[m.vie], D.valvole[m.valvola]?.descrizione || m.valvola, m.caricata_pdm ? 'Caricata a PDM' : 'Da caricare a PDM'].join(' · '))}" aria-label="${h([m.codice || 'Senza codice', m.misura, `${VIE_LABEL[m.vie]}`, m.caricata_pdm ? 'caricata a PDM' : 'da caricare a PDM'].join(', '))}">${h(m.codice ? m.codice.replace('CMB-', '') : '—')}</button>`).join('')}</div>
 				</section>`).join('')}
 			</div>
-		</section>`;
+		</section>
+		${selezionata ? modaleCombinazione(selezionata) : ''}`;
+}
+
+// Modale: configurazione completa di un assieme + stato PDM (sola lettura)
+function modaleCombinazione(m) {
+	const desc = (anag, codice) => anag[codice]?.descrizione || 'non in anagrafica';
+	const riga = (ruolo, pillHtml, descrizione) => `<tr>
+		<th>${h(ruolo)}</th><td>${pillHtml}</td><td class="desc-cell">${h(descrizione)}</td></tr>`;
+	const att = D.attuatori[m.attuatore];
+	const stato = m.caricata_pdm
+		? `<button type="button" class="btn pdm-stato is-caricata" disabled title="Modificabile solo nel sorgente: tabella pdm_caricate in data/belimo.sql">✓ CARICATA A PDM${m.data_pdm ? ` · ${h(m.data_pdm)}` : ''}</button>`
+		: `<button type="button" class="btn pdm-stato is-da-caricare" disabled title="Modificabile solo nel sorgente: tabella pdm_caricate in data/belimo.sql">DA CARICARE A PDM</button>`;
+	return `<div class="modal mosaic-modal" data-chiudi-modale role="dialog" aria-modal="true" aria-labelledby="mosaicModalTitle">
+		<div class="modal-box">
+			<div class="modal-head">
+				<h2 id="mosaicModalTitle">${m.codice ? tag(m.codice, 'pill-cmb') : tag('SENZA CODICE', 'pill-err')} ${h(serieRiga(m))} — ${h(m.tipologia)}</h2>
+				<button type="button" class="btn btn-secondary" data-chiudi-modale aria-label="Chiudi">✕</button>
+			</div>
+			<div class="pill-wrap mosaic-modal-ctx">
+				${tag(m.misura)} ${tag(VIE_LABEL[m.vie])} ${passaggioTag(D.valvole[m.valvola]?.passaggio)} ${tipoTag(m.tipologia)} ${marcaTag(m.marca_attuatore)} ${m.corpo_inox ? tag('CORPO INOX', 'c c-silver') : ''}
+			</div>
+			<div class="modal-scroll">
+				<table class="data-table mosaic-modal-table"><tbody>
+					${riga('Valvola', valvolaPill(m.valvola, false), desc(D.valvole, m.valvola))}
+					${riga('Adattatore', m.adattatore ? adattatorePill(m.adattatore, false) : pill('', 'nessuno', 'pill-na'), m.adattatore ? desc(D.adattatori, m.adattatore) : '—')}
+					${riga('Kit', kitPill(m.kit, false), desc(D.kit, m.kit))}
+					${riga('Attuatore', attuatorePill(m.attuatore, false), att ? [att.descrizione, att.alimentazione].filter(Boolean).join(' · ') : 'non in anagrafica')}
+					${riga('Codice PDM', m.codice_pdm ? tag(m.codice_pdm, 'pill-ok') : pill('', 'da compilare', 'pill-gap'), '')}
+					${riga('Codice CAD', m.codice_cad ? tag(m.codice_cad, 'pill-ok') : pill('', 'da compilare', 'pill-gap'), '')}
+					${m.note ? riga('Note', '', m.note) : ''}
+				</tbody></table>
+			</div>
+			<div class="mosaic-modal-foot">${stato}</div>
+		</div>
+	</div>`;
+}
+
+function chiudiModale() {
+	S.mosaicoCodice = null;
+	render();
 }
 
 // SheetJS caricato solo quando serve
@@ -945,14 +978,17 @@ function applicaRicerca() {
 }
 
 document.addEventListener('click', e => {
+	// Modale mosaico: chiusura con ✕ o clic sullo sfondo (non dentro il box)
+	const chiudi = e.target.closest('[data-chiudi-modale]');
+	if (chiudi && (chiudi.tagName === 'BUTTON' || e.target === chiudi)) { chiudiModale(); return; }
 	const t = e.target.closest('button');
 	if (!t) return;
-	if (t.dataset.tab) { S.tab = t.dataset.tab; history.replaceState(null, '', '#' + S.tab); render(); }
+	if (t.dataset.tab) { S.tab = t.dataset.tab; S.mosaicoCodice = null; history.replaceState(null, '', '#' + S.tab); render(); }
 	else if (t.dataset.modello !== undefined) { S.filtroModello = t.dataset.modello || null; render(); }
 	else if (t.dataset.marca !== undefined) { S.filtroMarca = t.dataset.marca || null; render(); }
 	else if (t.dataset.mmodello !== undefined) { S.matriceModello = t.dataset.mmodello || null; render(); }
 	else if (t.dataset.mstato) { S.matriceStato = t.dataset.mstato; render(); }
-	else if (t.dataset.mosaic !== undefined) { S.mosaicoCodice = t.dataset.mosaic || null; render(); }
+	else if (t.dataset.mosaic !== undefined) { S.mosaicoCodice = Number(t.dataset.mosaic); render(); }
 	else if (t.id === 'matriceExport') esportaMatrice();
 	else if (t.id === 'matriceImport') document.getElementById('matriceFile').click();
 	else if (t.dataset.copia) copiaTesto(t.dataset.copia, t);
@@ -962,6 +998,7 @@ document.addEventListener('click', e => {
 });
 
 document.addEventListener('keydown', e => {
+	if (e.key === 'Escape' && S.mosaicoCodice !== null) { chiudiModale(); return; }
 	if (e.target.id === 'sqlBox' && e.key === 'Enter' && (e.ctrlKey || e.metaKey)) { e.preventDefault(); eseguiSql(); }
 });
 

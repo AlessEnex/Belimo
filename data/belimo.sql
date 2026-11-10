@@ -439,16 +439,27 @@ SELECT accoppiamento_id, ordine, modello, variante, tipologia, misura, vie, valv
        (SELECT valore FROM impostazioni WHERE chiave = 'kit_corpo_inox'), attuatore, 1
 FROM base WHERE corpo_inox = 1;
 
+-- Combinazioni gia' caricate a PDM. Si modifica SOLO qui nel sorgente:
+-- per segnarne una come caricata aggiungere in fondo al file
+--   INSERT INTO pdm_caricate VALUES ('CMB-nnnn', 'AAAA-MM-GG', NULL);
+CREATE TABLE pdm_caricate (
+  codice  TEXT PRIMARY KEY REFERENCES combinazioni(codice),
+  data    TEXT,
+  note    TEXT
+);
+
 -- Matrice completa: combinazioni attese + codice assegnato (NULL = codice mancante)
 CREATE VIEW matrice AS
 SELECT c.codice, e.modello, e.variante, e.tipologia, e.misura, e.vie, t.brand AS marca_attuatore, e.corpo_inox,
        e.valvola, e.adattatore, e.kit, e.attuatore, c.codice_pdm, c.codice_cad, c.note,
-       e.accoppiamento_id, e.ordine
+       e.accoppiamento_id, e.ordine,
+       (p.codice IS NOT NULL) AS caricata_pdm, p.data AS data_pdm
 FROM combinazioni_attese e
 JOIN attuatori t ON t.codice = e.attuatore
 LEFT JOIN combinazioni c
   ON c.valvola = e.valvola AND COALESCE(c.adattatore, '') = COALESCE(e.adattatore, '')
- AND c.kit = e.kit AND c.attuatore = e.attuatore;
+ AND c.kit = e.kit AND c.attuatore = e.attuatore
+LEFT JOIN pdm_caricate p ON p.codice = c.codice;
 
 -- GMC · ON-OFF
 INSERT INTO combinazioni VALUES ('CMB-0001', '25C1800', '25C201D', '25C491A', '25C201P', NULL, NULL, NULL);
